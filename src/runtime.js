@@ -11,11 +11,6 @@
   const nativeFetch = window.fetch ? window.fetch.bind(window) : null;
   const IS_EXTENSION = "__SOFT98_BUILD_TARGET__" === "extension";
   const STORAGE_KEY = "soft98-ad-blocker.settings";
-  const PIRATE_LOGO =
-    "data:image/svg+xml;charset=UTF-8," +
-    encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M42 71c-14-9-19-26-11-41 9-18 35-21 49-7 13-15 39-12 49 6 8 15 3 33-11 42" fill="#eef7ff" stroke="#0b1722" stroke-width="4"/><path d="M51 57h18M91 57h18" stroke="#0b1722" stroke-width="8"/><path d="M80 64l-7 14h14z" fill="#0b1722" stroke="#0b1722" stroke-width="2"/><path d="M48 88l68-68M112 88L44 21" stroke="#74e0b0" stroke-width="7"/><path d="M155 35h38c23 0 36 10 36 27 0 18-14 28-38 28h-36z" fill="#74e0b0" stroke="#0b1722" stroke-width="4"/><path d="M164 51h28c11 0 17 4 17 12s-6 12-17 12h-28z" fill="#0b1722"/></g><text x="242" y="55" fill="#eef7ff" font-family="Arial, sans-serif" font-size="30" font-weight="800">Soft98</text><text x="244" y="86" fill="#74e0b0" font-family="Arial, sans-serif" font-size="27" font-weight="800">Pro</text></svg>'
-    );
   const EXTENSION_REPO = "https://github.com/DRSDavidSoft/soft98-pro";
   const LOCALE = preferredLocale();
   const RTL = LOCALE === "fa";
@@ -28,7 +23,6 @@
       pro: "Enable Pro",
       darkDesign: "Modern dark design",
       linkBadges: "Download badges",
-      pirateLogo: "Pirate logo",
       diagnostics: "Console diagnostics",
       recommendExtension: "Recommend extension",
       scanNow: "Scan now",
@@ -46,7 +40,6 @@
       pro: "فعال‌سازی Pro",
       darkDesign: "طراحی تیره مدرن",
       linkBadges: "نشان لینک دانلود",
-      pirateLogo: "لوگوی جایگزین",
       diagnostics: "گزارش کنسول",
       recommendExtension: "پیشنهاد افزونه",
       scanNow: "بررسی دوباره",
@@ -64,7 +57,7 @@
     darkDesign: true,
     compactLayout: true,
     linkBadges: true,
-    pirateLogo: true,
+    pirateLogo: false,
     diagnostics: true,
     recommendExtension: false,
   };
@@ -164,14 +157,14 @@
   function readSettings() {
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-      return { ...DEFAULT_SETTINGS, ...stored, recommendExtension: false };
+      return { ...DEFAULT_SETTINGS, ...stored, pirateLogo: false, recommendExtension: false };
     } catch (_error) {
       return { ...DEFAULT_SETTINGS };
     }
   }
 
   function writeSettings(next) {
-    settings = { ...DEFAULT_SETTINGS, ...next };
+    settings = { ...DEFAULT_SETTINGS, ...next, pirateLogo: false };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
@@ -611,25 +604,6 @@
       .soft98-pro-theme pre,.soft98-pro-theme code{background:#071018!important;border-color:var(--s98p-border)!important;color:#d8f8ff!important}
       .soft98-pro-theme [style*="background:#fff"],.soft98-pro-theme [style*="background: #fff"],.soft98-pro-theme [style*="background-color:#fff"],.soft98-pro-theme [style*="background-color: #fff"]{background:var(--s98p-surface)!important}
       .soft98-pro-theme [style*="color:#000"],.soft98-pro-theme [style*="color: #000"],.soft98-pro-theme [style*="color:black"],.soft98-pro-theme [style*="color: black"]{color:var(--s98p-text)!important}
-      .soft98-pro-theme .fa,.soft98-pro-theme [class^="fa-"],.soft98-pro-theme [class*=" fa-"]{font-family:Arial,sans-serif!important;font-style:normal!important;font-weight:800!important;text-rendering:auto}
-      .soft98-pro-theme .fa:before,.soft98-pro-theme [class^="fa-"]:before,.soft98-pro-theme [class*=" fa-"]:before,.soft98-pro-theme .lbddsl:before,.soft98-pro-theme .cbddlv:before{content:"i"!important;display:inline-flex;align-items:center;justify-content:center;min-width:1em;font-family:Arial,sans-serif!important;font-style:normal!important;font-weight:800!important;text-rendering:auto}
-      .soft98-pro-theme .fa-moon-o:before{content:"M"!important}
-      .soft98-pro-theme .fa-notifications-active:before{content:"!"!important}
-      .soft98-pro-theme .fa-mail:before{content:"@"!important}
-      .soft98-pro-theme .fa-user-circle-o:before{content:"U"!important}
-      .soft98-pro-theme .fa-desktop-alt:before{content:"PC"!important;font-size:.72em}
-      .soft98-pro-theme .fa-android:before{content:"A"!important}
-      .soft98-pro-theme .fa-clouddbdl:before{content:"CL"!important;font-size:.72em}
-      .soft98-pro-theme .fa-crack:before{content:"*"!important}
-      .soft98-pro-theme .fa-file:before{content:"F"!important}
-      .soft98-pro-theme .fa-comment-o:before{content:"C"!important}
-      .soft98-pro-theme .lbddsl:before{content:"L"!important}
-      .soft98-pro-theme .lbddsl[href*="linkdoni"]:before{content:"LD"!important;font-size:.68em}
-      .soft98-pro-theme .lbddsl[href*="rss"]:before{content:"RSS"!important;font-size:.68em}
-      .soft98-pro-theme .lbddsl[href*="twitter"]:before,.soft98-pro-theme .lbddsl[href*="x.com"]:before{content:"X"!important}
-      .soft98-pro-theme .lbddsl[href*="facebook"]:before{content:"f"!important}
-      .soft98-pro-theme .lbddsl[href*="instagram"]:before{content:"IG"!important;font-size:.68em}
-      .soft98-pro-theme .cbddlv:before{content:"+"!important;color:var(--s98p-accent)!important;margin-inline-end:.25em}
       .soft98-pro-theme ::selection{background:rgba(116,224,176,.32);color:#fff}
       .soft98-pro-link-badge{margin-inline-start:.45em;padding:.12em .45em;border:1px solid rgba(112,225,178,.42);border-radius:999px;color:#baffd8;background:rgba(112,225,178,.12);font-size:.78em;vertical-align:middle}
     `;
@@ -731,26 +705,20 @@
     }
   }
 
-  function enhanceLogo() {
-    if (!settings.pirateLogo) return;
+  function restoreOriginalLogo() {
     const logo = document.querySelector("#logo-link img, a[href='/'] img, a[href='https://soft98.ir/'] img");
-    if (logo && !logo.getAttribute("data-soft98-original-logo")) {
-      logo.setAttribute("data-soft98-original-logo", logo.src || "");
-      logo.src = PIRATE_LOGO;
-      logo.alt = text("product");
-      return;
+    if (logo && logo.getAttribute("data-soft98-original-logo")) {
+      logo.src = logo.getAttribute("data-soft98-original-logo") || logo.src;
+      logo.removeAttribute("data-soft98-original-logo");
     }
     for (const link of document.querySelectorAll("a[href='/'], a[href='https://soft98.ir/'], a[href='https://soft98.ir']")) {
-      const style = getComputedStyle(link);
-      if (!/logo\.(?:avif|png|webp|jpg|jpeg|svg)/i.test(style.backgroundImage || "")) continue;
-      if (link.getAttribute("data-soft98-original-logo")) return;
-      link.setAttribute("data-soft98-original-logo", style.backgroundImage || "");
-      link.style.backgroundImage = `url("${PIRATE_LOGO}")`;
-      link.style.backgroundSize = "contain";
-      link.style.backgroundRepeat = "no-repeat";
-      link.style.backgroundPosition = "center";
-      link.setAttribute("aria-label", text("product"));
-      break;
+      const original = link.getAttribute("data-soft98-original-logo");
+      if (!original) continue;
+      link.style.backgroundImage = original;
+      link.style.backgroundSize = "";
+      link.style.backgroundRepeat = "";
+      link.style.backgroundPosition = "";
+      link.removeAttribute("data-soft98-original-logo");
     }
   }
 
@@ -772,7 +740,6 @@
           ["pro", text("pro")],
           ["darkDesign", text("darkDesign")],
           ["linkBadges", text("linkBadges")],
-          ["pirateLogo", text("pirateLogo")],
           ["diagnostics", text("diagnostics")],
           ["recommendExtension", text("recommendExtension")],
         ]
@@ -829,7 +796,7 @@
     );
     updateFavicon();
     onReady(() => {
-      enhanceLogo();
+      restoreOriginalLogo();
       removeLegacyBanners();
     });
   }

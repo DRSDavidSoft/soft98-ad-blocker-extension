@@ -10,7 +10,7 @@
     darkDesign: true,
     compactLayout: true,
     linkBadges: true,
-    pirateLogo: true,
+    pirateLogo: false,
     diagnostics: true,
     recommendExtension: false,
   };
@@ -29,7 +29,6 @@
         pro: ["Soft98 Pro", "Enable the enhanced experience layer."],
         darkDesign: ["Modern dark design", "Apply the modern dark Soft98 Pro theme."],
         linkBadges: ["Download badges", "Mark recovered download links."],
-        pirateLogo: ["Pirate logo", "Switch the logo after successful cleanup."],
         diagnostics: ["Console diagnostics", "Expose useful logs and interactive page APIs."],
       },
     },
@@ -45,12 +44,11 @@
         pro: ["Soft98 Pro", "فعال‌سازی لایه تجربه پیشرفته."],
         darkDesign: ["طراحی تیره مدرن", "اعمال ظاهر تیره مدرن Soft98 Pro."],
         linkBadges: ["نشان لینک دانلود", "نمایش نشان روی لینک‌های بازیابی‌شده."],
-        pirateLogo: ["لوگوی جایگزین", "تغییر لوگو پس از پاک‌سازی موفق."],
         diagnostics: ["گزارش کنسول", "نمایش لاگ‌ها و APIهای تعاملی برای بررسی."],
       },
     },
   };
-  const OPTIONS = ["blockAds", "patchScripts", "pro", "darkDesign", "linkBadges", "pirateLogo", "diagnostics"];
+  const OPTIONS = ["blockAds", "patchScripts", "pro", "darkDesign", "linkBadges", "diagnostics"];
 
   const root = document.querySelector("[data-app]");
   let settings = { ...DEFAULT_SETTINGS };
@@ -69,7 +67,9 @@
   }
 
   function storageGet(callback) {
-    api.storage.local.get({ [STORAGE_KEY]: DEFAULT_SETTINGS }, (result) => callback({ ...DEFAULT_SETTINGS, ...result[STORAGE_KEY] }));
+    api.storage.local.get({ [STORAGE_KEY]: DEFAULT_SETTINGS }, (result) =>
+      callback({ ...DEFAULT_SETTINGS, ...result[STORAGE_KEY], pirateLogo: false })
+    );
   }
 
   function storageSet(next, callback) {
@@ -84,7 +84,7 @@
   }
 
   function save(next) {
-    settings = { ...DEFAULT_SETTINGS, ...next };
+    settings = { ...DEFAULT_SETTINGS, ...next, pirateLogo: false };
     storageSet(settings, () => messageActiveTab({ type: "soft98:set-settings", settings }));
     render();
   }

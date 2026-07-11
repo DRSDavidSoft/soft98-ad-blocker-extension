@@ -11,6 +11,18 @@ const TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
+  ".avif": "image/avif",
+  ".gif": "image/gif",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".otf": "font/otf",
+  ".eot": "application/vnd.ms-fontobject",
 };
 const DEFAULT_LIVE_URL = "https://soft98.ir/internet/download-manager/4-idm-full-dl.html";
 
@@ -22,14 +34,71 @@ function safeJoin(base, requestPath) {
   return resolved;
 }
 
+function isSoft98Url(value) {
+  try {
+    const url = new URL(value);
+    return /(?:^|\.)soft98\.ir$/i.test(url.hostname);
+  } catch (_error) {
+    return false;
+  }
+}
+
+function proxiedUrl(value, baseUrl) {
+  if (!value || /^(?:data|blob|about|javascript|mailto):/i.test(value) || value.startsWith("#")) return value;
+  const absolute = new URL(value, baseUrl).href;
+  return isSoft98Url(absolute) ? `http://127.0.0.1:${PORT}/proxy?url=${encodeURIComponent(absolute)}` : value;
+}
+
+function rewriteCssAssets(css, baseUrl) {
+  return String(css)
+    .replace(/url\(\s*(["']?)([^"')]+)\1\s*\)/gi, (_match, quote, value) => `url(${quote || ""}${proxiedUrl(value, baseUrl)}${quote || ""})`)
+    .replace(/@import\s+(url\(\s*)?(["'])([^"']+)\2(\s*\))?/gi, (_match, prefix, quote, value, suffix) => {
+      const rewritten = proxiedUrl(value, baseUrl);
+      return `@import ${prefix || ""}${quote}${rewritten}${quote}${suffix || ""}`;
+    });
+}
+
+function rewriteHtmlAssets(html, baseUrl) {
+  return String(html).replace(/(<link\b[^>]*\bhref\s*=\s*)(["'])([^"']+)\2/gi, (match, prefix, quote, value) => {
+    const absolute = new URL(value, baseUrl);
+    if (!isSoft98Url(absolute.href)) return match;
+    if (!/\.(?:css|woff2?|ttf|otf|eot)(?:[?#].*)?$/i.test(absolute.pathname + absolute.search)) return match;
+    return `${prefix}${quote}${proxiedUrl(absolute.href, baseUrl)}${quote}`;
+  });
+}
+
 http
   .createServer(async (request, response) => {
     try {
       const requestUrl = new URL(request.url, "http://127.0.0.1");
+      if (requestUrl.pathname === "/proxy") {
+        const target = requestUrl.searchParams.get("url") || "";
+        if (!isSoft98Url(target)) throw new Error("Proxy target must be a Soft98 asset");
+        const upstream = await fetch(target, {
+          headers: {
+            "user-agent": "Mozilla/5.0 Soft98AdBlockerProof",
+          },
+        });
+        if (!upstream.ok) throw new Error(`Soft98 asset returned ${upstream.status}`);
+        const contentType = upstream.headers.get("content-type") || TYPES[path.extname(new URL(target).pathname).toLowerCase()] || "application/octet-stream";
+        response.setHeader("access-control-allow-origin", "*");
+        response.setHeader("cache-control", "public, max-age=300");
+        if (/text\/css/i.test(contentType) || /\.css(?:[?#].*)?$/i.test(new URL(target).pathname + new URL(target).search)) {
+          const css = rewriteCssAssets(await upstream.text(), target);
+          response.writeHead(200, { "content-type": "text/css; charset=utf-8" });
+          response.end(css);
+          return;
+        }
+        const body = Buffer.from(await upstream.arrayBuffer());
+        response.writeHead(200, { "content-type": contentType });
+        response.end(body);
+        return;
+      }
       if (requestUrl.pathname === "/live") {
         const target = requestUrl.searchParams.get("url") || DEFAULT_LIVE_URL;
         const proofView = requestUrl.searchParams.get("view") || "";
         const proofPanel = requestUrl.searchParams.get("panel") === "1";
+        const proofOverlay = requestUrl.searchParams.get("proof") !== "0";
         const upstream = await fetch(target, {
           headers: {
             "user-agent": "Mozilla/5.0 Soft98AdBlockerProof",
@@ -41,6 +110,7 @@ http
             (function () {
               var proofView = ${JSON.stringify(proofView)};
               var proofPanel = ${JSON.stringify(proofPanel)};
+              var proofOverlay = ${JSON.stringify(proofOverlay)};
               function ready(callback) {
                 if (document.body) callback();
                 else document.addEventListener("DOMContentLoaded", callback, { once: true });
@@ -97,12 +167,14 @@ http
                   var target = findDownloadSection();
                   if (target) target.scrollIntoView({ block: "center", inline: "nearest" });
                 }
-                var overlay = document.createElement("div");
-                overlay.id = "soft98-proof-overlay";
-                overlay.dir = "ltr";
-                overlay.style.cssText = "position:fixed;z-index:2147483647;left:16px;bottom:16px;display:grid;gap:6px;max-width:560px;padding:12px 14px;border:1px solid #245a38;border-radius:8px;background:#08140d;color:#dbffe5;font:13px/1.45 ui-monospace,Consolas,monospace;box-shadow:0 10px 35px rgba(0,0,0,.35)";
-                overlay.innerHTML = "<strong>Soft98 Pro live proof</strong><span>ads: " + ads + "</span><span>warnings: " + warnings + "</span><span>download links: " + links.length + "</span><span>first href: " + (first ? first.href : "none") + "</span>";
-                (document.body || document.documentElement).appendChild(overlay);
+                if (proofOverlay) {
+                  var overlay = document.createElement("div");
+                  overlay.id = "soft98-proof-overlay";
+                  overlay.dir = "ltr";
+                  overlay.style.cssText = "position:fixed;z-index:2147483647;left:16px;bottom:16px;display:grid;gap:6px;max-width:560px;padding:12px 14px;border:1px solid #245a38;border-radius:8px;background:#08140d;color:#dbffe5;font:13px/1.45 ui-monospace,Consolas,monospace;box-shadow:0 10px 35px rgba(0,0,0,.35)";
+                  overlay.innerHTML = "<strong>Soft98 Pro live proof</strong><span>ads: " + ads + "</span><span>warnings: " + warnings + "</span><span>download links: " + links.length + "</span><span>first href: " + (first ? first.href : "none") + "</span>";
+                  (document.body || document.documentElement).appendChild(overlay);
+                }
                 if (proofPanel && window.Soft98AdBlocker && window.Soft98AdBlocker.openPanel) {
                   window.Soft98AdBlocker.openPanel();
                 }
@@ -110,7 +182,8 @@ http
             });
             })();
           </script>`;
-        const withBase = original.replace(/<head([^>]*)>/i, `<head$1><base href="${target}">`);
+        const withAssets = rewriteHtmlAssets(original, target);
+        const withBase = withAssets.replace(/<head([^>]*)>/i, `<head$1><base href="${target}">`);
         const injected = /<\/body>/i.test(withBase) ? withBase.replace(/<\/body>/i, `${proofScript}</body>`) : `${withBase}${proofScript}`;
         response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         response.end(injected);

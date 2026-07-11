@@ -10,7 +10,7 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = Number(process.env.PORT || 8798);
 const DEFAULT_OUTPUT = path.join(ROOT, "docs", "assets", "soft98-pro-dark.png");
 const OUTPUT = path.resolve(process.argv[2] || process.env.SOFT98_SCREENSHOT_OUT || DEFAULT_OUTPUT);
-const URL = process.env.SOFT98_SCREENSHOT_URL || `http://127.0.0.1:${PORT}/live?panel=1`;
+const URL = process.env.SOFT98_SCREENSHOT_URL || `http://127.0.0.1:${PORT}/live?proof=0`;
 
 function chromePath() {
   const candidates = [
