@@ -67,6 +67,9 @@ if (!/data-open=true/.test(runtime) || !/cubic-bezier/.test(runtime)) {
 if (!/scrollDetectorsBlocked/.test(runtime) || !/addEventListener/.test(runtime) || !/blocked scroll-triggered Soft98 detector/.test(runtime)) {
   throw new Error("Scroll-triggered anti-adblock detector firewall is missing");
 }
+if (!/asiatech/.test(runtime) || !/آسیا/.test(runtime) || !/aside, section, div/.test(runtime)) {
+  throw new Error("Named ad frame removal, including Asiatech, is missing");
+}
 if (!/alert-warning/.test(runtime) || !/soft98-extension-recommendation/.test(runtime) || !/display:none!important/.test(runtime)) {
   throw new Error("First-paint anti-adblock/banner suppression CSS is missing");
 }

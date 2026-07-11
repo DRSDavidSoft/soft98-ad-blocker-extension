@@ -127,7 +127,7 @@
   const BLOCKED_URL = /(?:kaprila\.com|buysellads|\/ads?(?:\/|\.|$)|adservice|advertisement)/i;
   const BAD_HREF = /^(?:\s*|#|javascript:|void\(0\)|about:blank)$/i;
   const WARNING_TEXT =
-    /(?:افزونه\s+حذف\s+(?:تبلیغات|ﺗﺒﻠﻴﻐﺎت|تبل\S{0,6}غات)|فیلترشک|Dark Reader|SMostafaMoosavi|VPN|ریفرش\s+کنید|غیرفعال\s+کنید|disable\s+ad-?block|adblocker?)/i;
+    /(?:افزونه\s+حذف\s+(?:تبلیغات|ﺗﺒﻠﻴﻐﺎت|تبل\S{0,6}غات)|فیلترشک|Dark Reader|VPN|ریفرش\s+کنید|غیرفعال\s+کنید|disable\s+ad-?block|adblocker?)/i;
   const PERSIAN_BLOCKER_NOTICE =
     /(?:PersianBlocker|Persian\s*Blocker|MasterKia|آزادی\s+کاربران|چه\s+چیزی\s+وارد\s+مرورگر|هشدار\s+از\s+طرف\s+لیست\s+PersianBlocker|برگرداندن\s+آزادی\s+کاربران)/i;
   const WARNING_TITLE = /(?:افزونه\s+حذف|ﺗﺒﻠﻴﻐﺎت|VPN|فیلترشک|Dark Reader|ad-?block)/i;
@@ -135,6 +135,7 @@
     /(?:افزونه\s+حذف|ﺗﺒﻠﻴﻐﺎت|Dark Reader|disableDownloadLink|setNullLinkAttributes|checkadBlocker|advertisementrk|text_add_firewall|kaprila|adguard|location\.reload|location\.hash|document\.title|alert-warning|adblock)/i;
   const SCROLL_EVENTS = /^(?:scroll|wheel|mousewheel|touchmove)$/i;
   const AD_SIZE = /^(?:728x90|970x90|468x60|300x250|336x280|240x90|160x600)$/;
+  const NAMED_AD_TEXT = /(?:asiatech|آسیا[\u0640\s\u200c-]*تک|آ[\u0640\s\u200c-]*س[\u0640\s\u200c-]*ی[\u0640\s\u200c-]*ا[\u0640\s\u200c-]*ت[\u0640\s\u200c-]*ک)/i;
 
   function onReady(callback) {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", callback, { once: true });
@@ -286,9 +287,58 @@
     }
   }
 
+  function adComparableText(node) {
+    if (!node) return "";
+    const parts = [
+      node.getAttribute && node.getAttribute("title"),
+      node.getAttribute && node.getAttribute("aria-label"),
+      node.getAttribute && node.getAttribute("alt"),
+      node.getAttribute && node.getAttribute("href"),
+      node.getAttribute && node.getAttribute("src"),
+      node.id || "",
+      node.className || "",
+    ];
+    if (node.childNodes) {
+      for (const child of node.childNodes) {
+        if (child.nodeType === Node.TEXT_NODE) parts.push(child.textContent || "");
+      }
+    }
+    if (node.children) {
+      for (const child of node.children) {
+        if (!child.matches || !child.matches("h1,h2,h3,h4,h5,h6,header,[class*='title'],[class*='head'],a,img")) continue;
+        parts.push(child.textContent || "", child.getAttribute("title"), child.getAttribute("aria-label"), child.getAttribute("alt"), child.getAttribute("href"), child.getAttribute("src"));
+      }
+    }
+    return parts
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\u0640/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function hasNamedAdMarker(node) {
+    const value = adComparableText(node);
+    return NAMED_AD_TEXT.test(value);
+  }
+
+  function isLikelyNamedAdFrame(node) {
+    const element = asElement(node);
+    if (!element || element === document.documentElement || element === document.body) return false;
+    if (!hasNamedAdMarker(element) || isProtectedContentContainer(element)) return false;
+    const box = visibleBox(element);
+    if (!box.width && !box.height) return false;
+    const viewportArea = Math.max(1, window.innerWidth * window.innerHeight);
+    const area = Math.max(1, box.width * box.height);
+    const hasAdPayload = Boolean(element.querySelector("a[href], img, iframe, object, embed, picture, source")) || ["A", "IMG", "IFRAME"].includes(element.tagName);
+    const compact = (adComparableText(element).length < 260 && area < viewportArea * 0.24) || /(?:side|banner|ads?|adv|tabligh|تبلیغ)/i.test(String(element.className || ""));
+    return compact || hasAdPayload;
+  }
+
   function isLikelyAdSurface(node) {
     const element = asElement(node);
     if (!element) return false;
+    if (isLikelyNamedAdFrame(element)) return true;
     const image = element.tagName === "IMG" ? element : element.querySelector && element.querySelector("img");
     const link = element.closest && element.closest("a[href]");
     const href = link ? link.href || link.getAttribute("href") : element.getAttribute("href");
@@ -332,7 +382,23 @@
     if (!element) return null;
     const link = element.closest && element.closest("a[href]");
     if (link && isLikelyAdSurface(link)) return link;
+    if (isLikelyNamedAdFrame(element)) return bestAdFrameRoot(element);
     return element;
+  }
+
+  function bestAdFrameRoot(element) {
+    let best = element;
+    for (let parent = element.parentElement; parent && parent !== document.body && parent !== document.documentElement; parent = parent.parentElement) {
+      if (!hasNamedAdMarker(parent) || isProtectedContentContainer(parent)) break;
+      const box = visibleBox(parent);
+      if (!box.width && !box.height) break;
+      const viewportArea = Math.max(1, window.innerWidth * window.innerHeight);
+      const area = Math.max(1, box.width * box.height);
+      const text = adComparableText(parent);
+      if (text.length > 360 || area > viewportArea * 0.28) break;
+      best = parent;
+    }
+    return best;
   }
 
   function rememberLink(link) {
@@ -420,10 +486,13 @@
     const nodes = [];
     if (element.matches && element.matches(SELECTORS.removableAds)) nodes.push(element);
     if (element.querySelectorAll) nodes.push(...element.querySelectorAll(SELECTORS.removableAds));
-    if (element.matches && isLikelyAdSurface(element)) nodes.push(element);
+    if (element.matches && (isLikelyNamedAdFrame(element) || (["A", "IMG", "IFRAME"].includes(element.tagName) && isLikelyAdSurface(element)))) nodes.push(element);
     if (element.querySelectorAll) {
       for (const node of element.querySelectorAll("a[href], img, iframe")) {
         if (isLikelyAdSurface(node)) nodes.push(node);
+      }
+      for (const node of element.querySelectorAll("aside, section, div")) {
+        if (isLikelyNamedAdFrame(node)) nodes.push(node);
       }
     }
     for (const node of nodes) {

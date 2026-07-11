@@ -114,6 +114,12 @@
           kaprila.textContent = "ad";
           document.body.appendChild(kaprila);
 
+          var asiatech = document.createElement("aside");
+          asiatech.className = "side-panel";
+          asiatech.setAttribute("data-test", "asiatech-frame");
+          asiatech.innerHTML = '<h2>آسـیاتک</h2><div class="ad-body"></div>';
+          document.body.appendChild(asiatech);
+
           var blockerNotice = document.createElement("aside");
           blockerNotice.id = "PersianBlockerFreedomNotice";
           blockerNotice.style.cssText = "position:fixed;top:0;left:0;right:0;height:72px";
@@ -154,6 +160,7 @@
             warnings: document.querySelectorAll(".tbd_ibd, .trk_irk, .tbdc").length,
             blockerNotices: document.querySelectorAll("#PersianBlockerFreedomNotice, [id*='PersianBlocker']").length,
             kaprila: document.querySelectorAll("#kaprila_soft98_ir_related, [id*='kaprila']").length,
+            asiatech: document.querySelectorAll("[data-test='asiatech-frame']").length,
             hash: location.hash,
             title: document.title,
             patch: document.documentElement.getAttribute("data-soft98-patch-result"),
