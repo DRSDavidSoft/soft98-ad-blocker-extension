@@ -71,7 +71,16 @@
   const savedHref = new WeakMap();
   const trackedLinks = new Set();
   const pendingRoots = new Set();
-  const stats = { adsRemoved: 0, warningsRemoved: 0, blockerNoticesRemoved: 0, linksPreserved: 0, linksRestored: 0, patches: [], patchFailures: [] };
+  const stats = {
+    adsRemoved: 0,
+    warningsRemoved: 0,
+    blockerNoticesRemoved: 0,
+    linksPreserved: 0,
+    linksRestored: 0,
+    scrollDetectorsBlocked: 0,
+    patches: [],
+    patchFailures: [],
+  };
   const eventLog = [];
   let scheduled = false;
   let recoveryStarted = false;
@@ -111,6 +120,7 @@
       ".trk_irk",
       ".tooltip",
       ".alert-warning",
+      "[role='alert']",
       "[class*='d-darkreader-inline-block']",
       "[class*='dlgbdinline-block']",
       "[class*='dlgrkinline-block']",
@@ -129,7 +139,8 @@
     /(?:PersianBlocker|Persian\s*Blocker|MasterKia|آزادی\s+کاربران|چه\s+چیزی\s+وارد\s+مرورگر|هشدار\s+از\s+طرف\s+لیست\s+PersianBlocker|برگرداندن\s+آزادی\s+کاربران)/i;
   const WARNING_TITLE = /(?:افزونه\s+حذف|ﺗﺒﻠﻴﻐﺎت|VPN|فیلترشک|Dark Reader|ad-?block)/i;
   const SOFT98_CODE_MARKERS =
-    /(?:افزونه\s+حذف|ﺗﺒﻠﻴﻐﺎت|Dark Reader|disableDownloadLink|setNullLinkAttributes|checkadBlocker|advertisementrk|text_add_firewall|kaprila|adguard|location\.reload)/i;
+    /(?:افزونه\s+حذف|ﺗﺒﻠﻴﻐﺎت|Dark Reader|disableDownloadLink|setNullLinkAttributes|checkadBlocker|advertisementrk|text_add_firewall|kaprila|adguard|location\.reload|location\.hash|document\.title|alert-warning|adblock)/i;
+  const SCROLL_EVENTS = /^(?:scroll|wheel|mousewheel|touchmove)$/i;
   const AD_SIZE = /^(?:728x90|970x90|468x60|300x250|336x280|240x90|160x600)$/;
 
   function onReady(callback) {
@@ -152,7 +163,8 @@
 
   function readSettings() {
     try {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") };
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      return { ...DEFAULT_SETTINGS, ...stored, recommendExtension: false };
     } catch (_error) {
       return { ...DEFAULT_SETTINGS };
     }
@@ -507,6 +519,12 @@
     if (originalTitle && WARNING_TITLE.test(document.title)) document.title = originalTitle;
   }
 
+  function removeLegacyBanners() {
+    for (const node of document.querySelectorAll("#soft98-ad-blocker-taunt,#soft98-extension-recommendation")) {
+      node.remove();
+    }
+  }
+
   function domDepth(element) {
     let depth = 0;
     for (let node = element; node && node.parentElement; node = node.parentElement) depth += 1;
@@ -514,6 +532,7 @@
   }
 
   function processRoot(root) {
+    removeLegacyBanners();
     collectLinks(root);
     removeExternalAds(root);
     removeWarnings(root);
@@ -543,7 +562,8 @@
     style.textContent = `
       #kaprila_soft98_ir_related,[id^="kaprila"],[id*="kaprila"],[class*="kaprila"],
       .download-list-item-buysellads,[class*="buysellads"],#footer-bitcoin,iframe[src*="kaprila.com"],
-      .tbd_ibd,.tbdc,.trk_irk{display:none}
+      .tbd_ibd,.tbdc,.trk_irk,.alert-warning,[role="alert"],
+      #soft98-ad-blocker-taunt,#soft98-extension-recommendation{display:none!important}
       [id*="PersianBlocker"],[class*="PersianBlocker"]{display:none!important}
       a[${DATA_HREF}]{pointer-events:auto}
     `;
@@ -810,7 +830,7 @@
     updateFavicon();
     onReady(() => {
       enhanceLogo();
-      renderExtensionRecommendation();
+      removeLegacyBanners();
     });
   }
 
@@ -952,6 +972,95 @@
     }
   }
 
+  function isSuspiciousDetector(callback) {
+    try {
+      const source = Function.prototype.toString.call(callback || "");
+      return SOFT98_CODE_MARKERS.test(source) || WARNING_TEXT.test(source) || WARNING_TITLE.test(source);
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  function installScrollDetectorFirewall() {
+    if (window.__soft98ScrollDetectorFirewall) return;
+    window.__soft98ScrollDetectorFirewall = true;
+    const originalAdd = EventTarget.prototype.addEventListener;
+    const originalRemove = EventTarget.prototype.removeEventListener;
+    const wrapped = new WeakMap();
+
+    EventTarget.prototype.addEventListener = function patchedAddEventListener(type, callback, options) {
+      if (typeof callback !== "function" || !SCROLL_EVENTS.test(String(type || ""))) {
+        return originalAdd.call(this, type, callback, options);
+      }
+      if (isSuspiciousDetector(callback)) {
+        stats.scrollDetectorsBlocked += 1;
+        log("warn", "blocked scroll-triggered Soft98 detector", { type: String(type) });
+        return originalAdd.call(this, type, function noopSoft98ScrollDetector() {
+          removeWarnings(document);
+        }, options);
+      }
+      let replacement = wrapped.get(callback);
+      if (!replacement) {
+        replacement = function guardedScrollListener(event) {
+          try {
+            return callback.call(this, event);
+          } finally {
+            removeWarnings(document);
+          }
+        };
+        wrapped.set(callback, replacement);
+      }
+      return originalAdd.call(this, type, replacement, options);
+    };
+
+    EventTarget.prototype.removeEventListener = function patchedRemoveEventListener(type, callback, options) {
+      return originalRemove.call(this, type, wrapped.get(callback) || callback, options);
+    };
+
+    for (const target of [window, document]) {
+      for (const property of ["onscroll", "onwheel", "onmousewheel", "ontouchmove"]) {
+        installScrollPropertyFirewall(target, property);
+      }
+    }
+  }
+
+  function installScrollPropertyFirewall(target, property) {
+    try {
+      let current = null;
+      Object.defineProperty(target, property, {
+        configurable: true,
+        enumerable: true,
+        get() {
+          return current;
+        },
+        set(callback) {
+          if (current) target.removeEventListener(property.slice(2), current);
+          if (typeof callback !== "function") {
+            current = callback || null;
+            return;
+          }
+          if (isSuspiciousDetector(callback)) {
+            stats.scrollDetectorsBlocked += 1;
+            current = function noopSoft98ScrollPropertyDetector() {
+              removeWarnings(document);
+            };
+          } else {
+            current = function guardedScrollPropertyListener(event) {
+              try {
+                return callback.call(this, event);
+              } finally {
+                removeWarnings(document);
+              }
+            };
+          }
+          target.addEventListener(property.slice(2), current);
+        },
+      });
+    } catch (error) {
+      recordPatchFailure(`scroll-property-${property}`, error, "");
+    }
+  }
+
   function installClickRepair() {
     for (const eventName of ["click", "mouseover"]) {
       document.addEventListener(
@@ -1050,10 +1159,11 @@
       document.documentElement.setAttribute("data-soft98-ad-blocker", VERSION);
       window.dispatchEvent(new CustomEvent("soft98-ad-blocker:extension-ready", { detail: { version: VERSION } }));
     }
+    installStyle();
+    installScrollDetectorFirewall();
     resetDocumentHandles();
     installEvalHijack();
     installScriptHijack();
-    installStyle();
     installProStyle();
     installClickRepair();
     schedule(document);

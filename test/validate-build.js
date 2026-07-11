@@ -49,7 +49,6 @@ if (!/\.toDataURL\("image\/png"\)/.test(runtime) || !/soft98-pro-favicon/.test(r
 for (const removed of [
   "تبلیغات حذف شد، لینک‌ها سالم ماندند",
   "anti-blocking test answered",
-  "soft98-ad-blocker-taunt",
 ]) {
   if (runtime.includes(removed) || userscript.includes(removed)) throw new Error(`Removed success banner text leaked into build: ${removed}`);
 }
@@ -64,6 +63,15 @@ if (!/data:image\/svg\+xml/.test(runtime) || !/encodeURIComponent/.test(runtime)
 }
 if (!/data-open=true/.test(runtime) || !/cubic-bezier/.test(runtime)) {
   throw new Error("Soft98 Pro control panel transition styling is missing");
+}
+if (!/scrollDetectorsBlocked/.test(runtime) || !/addEventListener/.test(runtime) || !/blocked scroll-triggered Soft98 detector/.test(runtime)) {
+  throw new Error("Scroll-triggered anti-adblock detector firewall is missing");
+}
+if (!/alert-warning/.test(runtime) || !/soft98-extension-recommendation/.test(runtime) || !/display:none!important/.test(runtime)) {
+  throw new Error("First-paint anti-adblock/banner suppression CSS is missing");
+}
+if (/enhanceLogo\(\),renderExtensionRecommendation/.test(runtime) || /addTaunt/.test(runtime)) {
+  throw new Error("Automatic banner rendering must not run after successful cleanup");
 }
 const screenshotTool = fs.readFileSync(path.join(ROOT, "tools", "screenshot.js"), "utf8");
 if (!screenshotTool.includes("/live?panel=1")) throw new Error("Screenshot generator must capture the open Pro panel");

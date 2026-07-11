@@ -69,6 +69,24 @@
     <script src="../soft98-pro.user.js"></script>
     <script>
       window.__results = null;
+      window.addEventListener("scroll", function soft98ScrollAdblockDetector() {
+        document.documentElement.setAttribute("data-soft98-scroll-detector", "failed");
+        var warning = document.createElement("div");
+        warning.className = "alert-warning";
+        warning.setAttribute("role", "alert");
+        warning.textContent = "افزونه حذف تبلیغات را غیرفعال کنید";
+        document.body.appendChild(warning);
+        location.hash = encodeURIComponent("افزونه حذف تبلیغات");
+        document.title = "افزونه حذف تبلیغات - Soft98";
+      });
+      window.onscroll = function soft98AssignedScrollAdblockDetector() {
+        document.documentElement.setAttribute("data-soft98-assigned-scroll-detector", "failed");
+        var warning = document.createElement("div");
+        warning.className = "alert-warning";
+        warning.setAttribute("role", "alert");
+        warning.textContent = "disable adblock";
+        document.body.appendChild(warning);
+      };
 
       document.addEventListener("DOMContentLoaded", function () {
         var link = document.querySelector(".download-list-link");
@@ -107,6 +125,10 @@
         }, 50);
 
         setTimeout(function () {
+          window.dispatchEvent(new Event("scroll"));
+        }, 240);
+
+        setTimeout(function () {
           try {
             eval(
               'var antiBlockerMessage="افزونه حذف تبلیغات"; function makeWarning(){document.documentElement.setAttribute("data-soft98-patch-result","failed");return new Error("blocked")} function runDetector(){throw makeWarning()} runDetector(); document.documentElement.setAttribute("data-soft98-patch-result","passed");'
@@ -136,6 +158,9 @@
             title: document.title,
             patch: document.documentElement.getAttribute("data-soft98-patch-result"),
             topLevelPatch: document.documentElement.getAttribute("data-soft98-top-level-patch"),
+            scrollDetector: document.documentElement.getAttribute("data-soft98-scroll-detector"),
+            assignedScrollDetector: document.documentElement.getAttribute("data-soft98-assigned-scroll-detector"),
+            scrollWarnings: document.querySelectorAll(".alert-warning,[role='alert']").length,
             version: window.Soft98AdBlocker && window.Soft98AdBlocker.version,
           };
           document.querySelector("[data-proof='href']").textContent = link.getAttribute("href");
@@ -146,6 +171,12 @@
           document.querySelector("[data-proof='patch']").textContent = document.documentElement.getAttribute("data-soft98-patch-result");
           document.querySelector("[data-proof='top-level-patch']").textContent =
             document.documentElement.getAttribute("data-soft98-top-level-patch");
+          document.querySelector("[data-proof='scroll']").textContent =
+            (document.documentElement.getAttribute("data-soft98-scroll-detector") || "blocked") +
+            "/" +
+            (document.documentElement.getAttribute("data-soft98-assigned-scroll-detector") || "blocked") +
+            "/" +
+            document.querySelectorAll(".alert-warning,[role='alert']").length;
         }, 350);
       });
     </script>
@@ -163,6 +194,7 @@
         <span>Ad nodes: <strong data-proof="ads">pending</strong></span>
         <span>Patch hijack: <strong data-proof="patch">pending</strong></span>
         <span>Top-level throw: <strong data-proof="top-level-patch">pending</strong></span>
+        <span>Scroll detector: <strong data-proof="scroll">pending</strong></span>
       </section>
     </main>
   </body>
