@@ -1,18 +1,38 @@
 # Soft98 Pro
 
-Soft98 Pro ships as both a userscript and a browser extension for Chrome, Edge, and Firefox.
+Soft98 Pro improves the Soft98 browsing experience with ad blocking, anti-adblock patching, download-link recovery, PersianBlocker notice cleanup, and an optional modern dark interface. It ships as both a userscript and browser extensions for Chrome, Edge, and Firefox. 🧭
 
-Both install paths are built from the same shared runtime in `src/runtime.js`, so patching, diagnostics, anti-adblock handling, PersianBlocker notice removal, download-link recovery, and Soft98 Pro behavior do not drift.
+The userscript and extensions are built from the same shared runtime in `src/runtime.js`, so the blocking logic, diagnostics, i18n, dark theme, favicon status indicator, and link recovery behavior stay aligned.
 
-## Downloads
+## ✨ What It Does
+
+- Blocks ad surfaces using source, shape, size, and link behavior.
+- Patches packed Soft98 code before fragile anti-adblock logic can break the page.
+- Preserves and restores download links when page scripts try to sabotage them.
+- Removes Soft98 and PersianBlocker warning notices without deleting the article body.
+- Enables Soft98 Pro and the dark theme by default.
+- Uses Persian UI when browser language is `fa` or timezone is `Asia/Tehran`; English otherwise.
+- Updates the favicon with a canvas-generated status icon after successful cleanup.
+
+## 📦 Downloads
 
 Use the latest GitHub release:
 
 - `soft98-pro-chromium-*.zip` for Chrome and Edge.
 - `soft98-pro-firefox-*.zip` for Firefox temporary/manual install.
-- `soft98-pro.user.js` for userscript managers.
+- `soft98-pro.user.js` for Tampermonkey, Violentmonkey, or another userscript manager.
 
-## Build
+Latest release: https://github.com/DRSDavidSoft/soft98-pro/releases/latest
+
+## 🧩 Userscript vs Browser Extension
+
+The userscript is the quickest path. Install `soft98-pro.user.js` in a userscript manager and it runs directly on Soft98 at `document-start`. It is easy to inspect, update, and share, but it depends on the userscript manager’s injection timing and page-world behavior.
+
+The browser extension is the stronger option. It can ship UI, persistent extension storage, content-script bridges, and browser-specific injection paths. Chrome and Edge use a Manifest V3 main-world runtime; Firefox uses a content bridge plus early page-runtime injection. The extension is better when you want richer settings, more predictable browser integration, and future room for advanced controls.
+
+Both options use the same core code. Choose the userscript for speed and transparency; choose the extension for durability and a fuller product surface. 🛠️
+
+## 🧪 Build
 
 ```bash
 npm ci
@@ -27,7 +47,7 @@ Build outputs:
 - `dist/firefox`: Firefox build with early page-runtime injection.
 - `dist/packages/*.zip`: release-ready ZIPs.
 
-## Install Unpacked
+## 🚀 Install Unpacked
 
 Chrome or Edge:
 
@@ -41,10 +61,18 @@ Firefox:
 2. Load Temporary Add-on.
 3. Select `dist/firefox/manifest.json`.
 
-## Runtime
+## 🕵️ Diagnostics
 
-The runtime favors behavior, structure, script signatures, and link preservation over generated class names or short random identifiers.
+Console diagnostics are available through:
 
-User-facing UI uses Persian when the browser language starts with `fa` or the browser timezone is `Asia/Tehran`; otherwise it uses English.
+- `window.Soft98AdBlocker.report()`
+- `window.Soft98AdBlocker.trapCheck()`
+- `window.Soft98AdBlocker.resetHandles()`
+- `window.Soft98AdBlocker.events`
+- `window.Soft98AdBlocker.stats`
 
-Console diagnostics are available through `window.Soft98AdBlocker.report()`, `trapCheck()`, `resetHandles()`, `events`, and `stats`.
+The public alias `window.Soft98Pro` is also exposed when page conditions allow it.
+
+## 📚 Wiki
+
+Project wiki pages live in [`docs/wiki`](docs/wiki/Home.md). They cover installation, diagnostics, development, and the practical differences between the userscript and browser extension.

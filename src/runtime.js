@@ -10,7 +10,6 @@
   const nativeEval = typeof window.eval === "function" ? window.eval : null;
   const nativeFetch = window.fetch ? window.fetch.bind(window) : null;
   const IS_EXTENSION = "__SOFT98_BUILD_TARGET__" === "extension";
-  const RECOMMEND_EXTENSION = "__SOFT98_RECOMMEND_EXTENSION__" !== "false";
   const STORAGE_KEY = "soft98-ad-blocker.settings";
   const PIRATE_LOGO = "https://user-images.githubusercontent.com/4673812/50543067-1f2b7680-0be1-11e9-9daa-92828b24448e.png";
   const EXTENSION_REPO = "https://github.com/DRSDavidSoft/soft98-pro";
@@ -26,7 +25,6 @@
       darkDesign: "Modern dark design",
       linkBadges: "Download badges",
       pirateLogo: "Pirate logo",
-      taunt: "Professional challenge",
       diagnostics: "Console diagnostics",
       recommendExtension: "Recommend extension",
       scanNow: "Scan now",
@@ -34,9 +32,7 @@
       extensionTitle: "Browser extension is ready",
       extensionBody: "Install the extension for more precise control, richer settings, and steadier execution in Chrome, Edge, and Firefox.",
       extensionLink: "Get Soft98 Pro",
-      tauntText:
-        'Ads removed, links preserved, and the anti-blocking test answered with clean engineering. <a rel="nofollow" target="_blank" href="https://github.com/DRSDavidSoft/soft98-pro/blob/main/soft98-pro.user.js">Soft98 Pro</a>',
-      successLog: "The page kept its content. The ads did not. Challenge accepted with clean instruments.",
+      successLog: "Soft98 Pro is active.",
     },
     fa: {
       product: "Soft98 Pro",
@@ -47,7 +43,6 @@
       darkDesign: "طراحی تیره مدرن",
       linkBadges: "نشان لینک دانلود",
       pirateLogo: "لوگوی جایگزین",
-      taunt: "پیام موفقیت حرفه‌ای",
       diagnostics: "گزارش کنسول",
       recommendExtension: "پیشنهاد افزونه",
       scanNow: "بررسی دوباره",
@@ -55,22 +50,19 @@
       extensionTitle: "نسخه افزونه مرورگر آماده است",
       extensionBody: "برای کنترل دقیق‌تر، تنظیمات بیشتر، و اجرای مطمئن‌تر در Chrome، Edge و Firefox می‌توانید نسخه افزونه را نصب کنید.",
       extensionLink: "دریافت Soft98 Pro",
-      tauntText:
-        'تبلیغات حذف شد، لینک‌ها سالم ماندند، و آزمون ضد‌مسدودسازی با احترام فنی پاسخ داده شد. <a rel="nofollow" target="_blank" href="https://github.com/DRSDavidSoft/soft98-pro/blob/main/soft98-pro.user.js">Soft98 Pro</a>',
-      successLog: "محتوای صفحه ماند، تبلیغات نماند. چالش با ابزار تمیز پاسخ داده شد.",
+      successLog: "Soft98 Pro فعال است.",
     },
   };
   const DEFAULT_SETTINGS = {
     blockAds: true,
     patchScripts: true,
-    pro: false,
-    darkDesign: false,
+    pro: true,
+    darkDesign: true,
     compactLayout: true,
     linkBadges: true,
     pirateLogo: true,
-    taunt: true,
     diagnostics: true,
-    recommendExtension: RECOMMEND_EXTENSION,
+    recommendExtension: false,
   };
   const savedHref = new WeakMap();
   const trackedLinks = new Set();
@@ -566,12 +558,33 @@
     const style = document.createElement("style");
     style.id = "soft98-pro-style";
     style.textContent = `
-      :root.soft98-pro-theme{color-scheme:dark;--s98p-bg:#08111a;--s98p-surface:#101b27;--s98p-border:#27405a;--s98p-text:#e6f0fa;--s98p-muted:#9db1c6;--s98p-accent:#70e1b2;--s98p-link:#8cc8ff}
-      .soft98-pro-theme body{background:radial-gradient(circle at 18% 0%,rgba(112,225,178,.16),transparent 28rem),var(--s98p-bg);color:var(--s98p-text)}
-      .soft98-pro-theme a{color:var(--s98p-link)}
-      .soft98-pro-theme [class*="card"],.soft98-pro-theme [class*="box"],.soft98-pro-theme article,.soft98-pro-theme aside{border-color:var(--s98p-border);background-color:color-mix(in srgb,var(--s98p-surface) 92%,transparent);box-shadow:0 16px 40px rgba(0,0,0,.24)}
-      .soft98-pro-theme input,.soft98-pro-theme textarea,.soft98-pro-theme select{border-color:var(--s98p-border);background:var(--s98p-surface);color:var(--s98p-text)}
-      .soft98-pro-theme ::selection{background:rgba(112,225,178,.28)}
+      :root.soft98-pro-theme{color-scheme:dark;--s98p-bg:#09131d;--s98p-bg-2:#0e1a25;--s98p-surface:#142333;--s98p-surface-2:#192d40;--s98p-soft:#20384c;--s98p-border:#35536c;--s98p-text:#edf6ff;--s98p-muted:#a8bac9;--s98p-faint:#7890a4;--s98p-accent:#74e0b0;--s98p-accent-2:#ffd166;--s98p-link:#8dc8ff;--s98p-danger:#ff8a9a}
+      .soft98-pro-theme body{background:linear-gradient(180deg,#0d2636 0,#09131d 34rem,#0a121b 100%)!important;color:var(--s98p-text)!important}
+      .soft98-pro-theme body,.soft98-pro-theme p,.soft98-pro-theme li,.soft98-pro-theme dd,.soft98-pro-theme td,.soft98-pro-theme span{color:var(--s98p-text)}
+      .soft98-pro-theme small,.soft98-pro-theme time,.soft98-pro-theme .text-muted,.soft98-pro-theme [class*="meta"],.soft98-pro-theme [class*="date"]{color:var(--s98p-muted)!important}
+      .soft98-pro-theme a{color:var(--s98p-link)!important;text-decoration-color:rgba(141,200,255,.45)}
+      .soft98-pro-theme a:hover{color:#c9e7ff!important;text-decoration-color:var(--s98p-accent)}
+      .soft98-pro-theme hr{border-color:var(--s98p-border)!important}
+      .soft98-pro-theme .fixed-top,.soft98-pro-theme .navbar,.soft98-pro-theme nav,.soft98-pro-theme header{background:#0f1f2d!important;border-color:var(--s98p-border)!important;color:var(--s98p-text)!important}
+      .soft98-pro-theme .fixed-top,.soft98-pro-theme .navbar{box-shadow:0 12px 28px rgba(0,0,0,.28)}
+      .soft98-pro-theme .dbddm,.soft98-pro-theme [class*="dropdown-menu"]{background:var(--s98p-surface)!important;border-color:var(--s98p-border)!important;box-shadow:0 18px 40px rgba(0,0,0,.38)!important}
+      .soft98-pro-theme .dbddi,.soft98-pro-theme [class*="dropdown"] a{color:var(--s98p-text)!important}
+      .soft98-pro-theme .dbddi:hover,.soft98-pro-theme [class*="dropdown"] a:hover{background:var(--s98p-soft)!important;color:#ffffff!important}
+      .soft98-pro-theme .active,.soft98-pro-theme .nav-link.active,.soft98-pro-theme .nav-tabs .active,.soft98-pro-theme .tbdbp.active,.soft98-pro-theme [class*="active"]{background:var(--s98p-soft)!important;border-color:var(--s98p-border)!important;color:var(--s98p-text)!important}
+      .soft98-pro-theme .cbd,.soft98-pro-theme .rbd,.soft98-pro-theme .cbdd,.soft98-pro-theme .cbddb,.soft98-pro-theme .tbdbc,.soft98-pro-theme .tbdbp,.soft98-pro-theme .bbdl,.soft98-pro-theme .cbdtis,.soft98-pro-theme .breadcrumb,.soft98-pro-theme article,.soft98-pro-theme aside,.soft98-pro-theme section,.soft98-pro-theme [class*="card"],.soft98-pro-theme [class*="box"],.soft98-pro-theme [class*="panel"]{background:var(--s98p-surface)!important;border-color:var(--s98p-border)!important;color:var(--s98p-text)!important;box-shadow:0 16px 42px rgba(0,0,0,.24)}
+      .soft98-pro-theme .cbddh,.soft98-pro-theme h1,.soft98-pro-theme h2,.soft98-pro-theme h3,.soft98-pro-theme h4,.soft98-pro-theme strong{color:#f7fbff!important}
+      .soft98-pro-theme .cbdtlk,.soft98-pro-theme .cbdtim,.soft98-pro-theme .list-group-item,.soft98-pro-theme .media,.soft98-pro-theme .cbdmd118,.soft98-pro-theme dt,.soft98-pro-theme dd{background:var(--s98p-bg-2)!important;border-color:rgba(116,224,176,.22)!important;color:var(--s98p-text)!important}
+      .soft98-pro-theme .cbdtim:nth-child(odd),.soft98-pro-theme .list-group-item:nth-child(odd),.soft98-pro-theme dd:nth-child(odd){background:#102131!important}
+      .soft98-pro-theme .cbdtim:hover,.soft98-pro-theme .list-group-item:hover,.soft98-pro-theme .cbdtlk:hover{background:var(--s98p-soft)!important}
+      .soft98-pro-theme .alert,.soft98-pro-theme .alert-warning{background:rgba(255,209,102,.12)!important;border-color:rgba(255,209,102,.36)!important;color:#ffe6a3!important}
+      .soft98-pro-theme .btn,.soft98-pro-theme button,.soft98-pro-theme input[type="button"],.soft98-pro-theme input[type="submit"]{border-color:var(--s98p-border)!important;background:var(--s98p-soft)!important;color:var(--s98p-text)!important}
+      .soft98-pro-theme .btn-success,.soft98-pro-theme [class*="success"]{background:linear-gradient(180deg,#2fc484,#1f9b6a)!important;border-color:#54d79a!important;color:#06120c!important}
+      .soft98-pro-theme input,.soft98-pro-theme textarea,.soft98-pro-theme select{border-color:var(--s98p-border)!important;background:var(--s98p-bg-2)!important;color:var(--s98p-text)!important}
+      .soft98-pro-theme img{filter:saturate(.95) contrast(1.02)}
+      .soft98-pro-theme pre,.soft98-pro-theme code{background:#071018!important;border-color:var(--s98p-border)!important;color:#d8f8ff!important}
+      .soft98-pro-theme [style*="background:#fff"],.soft98-pro-theme [style*="background: #fff"],.soft98-pro-theme [style*="background-color:#fff"],.soft98-pro-theme [style*="background-color: #fff"]{background:var(--s98p-surface)!important}
+      .soft98-pro-theme [style*="color:#000"],.soft98-pro-theme [style*="color: #000"],.soft98-pro-theme [style*="color:black"],.soft98-pro-theme [style*="color: black"]{color:var(--s98p-text)!important}
+      .soft98-pro-theme ::selection{background:rgba(116,224,176,.32);color:#fff}
       .soft98-pro-link-badge{margin-inline-start:.45em;padding:.12em .45em;border:1px solid rgba(112,225,178,.42);border-radius:999px;color:#baffd8;background:rgba(112,225,178,.12);font-size:.78em;vertical-align:middle}
     `;
     (document.head || document.documentElement).appendChild(style);
@@ -681,17 +694,6 @@
     logo.alt = text("product");
   }
 
-  function addTaunt() {
-    if (!settings.taunt || document.getElementById("soft98-ad-blocker-taunt")) return;
-    const footer = document.querySelector("footer, [class*='footer']") || document.body;
-    const note = document.createElement("div");
-    note.id = "soft98-ad-blocker-taunt";
-    note.dir = RTL ? "rtl" : "ltr";
-    note.style.cssText = "margin:14px auto;padding:10px 14px;max-width:780px;border:1px solid rgba(112,225,178,.35);border-radius:8px;background:rgba(8,17,26,.88);color:#dfffee;text-align:center;font:13px/1.8 system-ui,sans-serif";
-    note.innerHTML = text("tauntText");
-    footer.appendChild(note);
-  }
-
   function renderControlPanel() {
     const old = document.getElementById("soft98-pro-control");
     if (old) old.remove();
@@ -710,7 +712,6 @@
           ["darkDesign", text("darkDesign")],
           ["linkBadges", text("linkBadges")],
           ["pirateLogo", text("pirateLogo")],
-          ["taunt", text("taunt")],
           ["diagnostics", text("diagnostics")],
           ["recommendExtension", text("recommendExtension")],
         ]
@@ -754,18 +755,15 @@
     if (!stats.adsRemoved && !stats.linksPreserved && !stats.patches.length) return;
     successAnnounced = true;
     log("info", "boarded successfully", { ...stats });
-    if (settings.taunt) {
-      safeConsole(
-        "info",
-        "%cSoft98 Pro%c " + text("successLog"),
-        "background:#70e1b2;color:#06120c;padding:4px 8px;border-radius:6px;font-weight:800",
-        "color:#9db1c6"
-      );
-    }
+    safeConsole(
+      "info",
+      "%cSoft98 Pro%c " + text("successLog"),
+      "background:#70e1b2;color:#06120c;padding:4px 8px;border-radius:6px;font-weight:800",
+      "color:#9db1c6"
+    );
     updateFavicon();
     onReady(() => {
       enhanceLogo();
-      addTaunt();
       renderExtensionRecommendation();
     });
   }

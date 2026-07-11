@@ -46,6 +46,16 @@ if (!/PersianBlocker|MasterKia/.test(runtime)) throw new Error("PersianBlocker n
 if (!/\.toDataURL\("image\/png"\)/.test(runtime) || !/soft98-pro-favicon/.test(runtime)) {
   throw new Error("Canvas favicon status indicator is missing");
 }
+for (const removed of [
+  "تبلیغات حذف شد، لینک‌ها سالم ماندند",
+  "anti-blocking test answered",
+  "soft98-ad-blocker-taunt",
+]) {
+  if (runtime.includes(removed) || userscript.includes(removed)) throw new Error(`Removed success banner text leaked into build: ${removed}`);
+}
+if (!/pro:!0/.test(runtime) || !/darkDesign:!0/.test(runtime)) {
+  throw new Error("Soft98 Pro and dark design must be enabled by default");
+}
 if (!userscript.includes("DRSDavidSoft/soft98-pro/main/soft98-pro.user.js")) {
   throw new Error("Userscript update URL must point at the dedicated Soft98 repo");
 }

@@ -12,7 +12,6 @@
     compactLayout: true,
     linkBadges: true,
     pirateLogo: true,
-    taunt: true,
     diagnostics: true,
     recommendExtension: false,
   };

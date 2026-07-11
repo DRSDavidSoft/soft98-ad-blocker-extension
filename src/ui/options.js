@@ -11,7 +11,6 @@
     compactLayout: true,
     linkBadges: true,
     pirateLogo: true,
-    taunt: true,
     diagnostics: true,
     recommendExtension: false,
   };
@@ -31,7 +30,6 @@
         darkDesign: ["Modern dark design", "Apply the modern dark Soft98 Pro theme."],
         linkBadges: ["Download badges", "Mark recovered download links."],
         pirateLogo: ["Pirate logo", "Switch the logo after successful cleanup."],
-        taunt: ["Professional challenge", "Show the success note only after the script works."],
         diagnostics: ["Console diagnostics", "Expose useful logs and interactive page APIs."],
       },
     },
@@ -48,12 +46,11 @@
         darkDesign: ["طراحی تیره مدرن", "اعمال ظاهر تیره مدرن Soft98 Pro."],
         linkBadges: ["نشان لینک دانلود", "نمایش نشان روی لینک‌های بازیابی‌شده."],
         pirateLogo: ["لوگوی جایگزین", "تغییر لوگو پس از پاک‌سازی موفق."],
-        taunt: ["پیام موفقیت حرفه‌ای", "نمایش پیام موفقیت فقط زمانی که ابزار واقعا کار کرده است."],
         diagnostics: ["گزارش کنسول", "نمایش لاگ‌ها و APIهای تعاملی برای بررسی."],
       },
     },
   };
-  const OPTIONS = ["blockAds", "patchScripts", "pro", "darkDesign", "linkBadges", "pirateLogo", "taunt", "diagnostics"];
+  const OPTIONS = ["blockAds", "patchScripts", "pro", "darkDesign", "linkBadges", "pirateLogo", "diagnostics"];
 
   const root = document.querySelector("[data-app]");
   let settings = { ...DEFAULT_SETTINGS };
