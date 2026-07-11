@@ -1,8 +1,16 @@
-# Soft98 Ad Blocker Extension
+# Soft98 Pro
 
-A browser extension version of Soft98 Ad Blocker for Chrome, Edge, and Firefox.
+Soft98 Pro ships as both a userscript and a browser extension for Chrome, Edge, and Firefox.
 
-The extension is the preferred install when users want deeper control than a userscript can provide: a popup/options surface, cross-tab settings, page-code patching at `document_start`, Soft98 Pro visual upgrades, and stronger removal of both Soft98 anti-adblock warnings and external blocker-side notices such as the PersianBlocker/MasterKia banner reported against Soft98.
+Both install paths are built from the same shared runtime in `src/runtime.js`, so patching, diagnostics, anti-adblock handling, PersianBlocker notice removal, download-link recovery, and Soft98 Pro behavior do not drift.
+
+## Downloads
+
+Use the latest GitHub release:
+
+- `soft98-pro-chromium-*.zip` for Chrome and Edge.
+- `soft98-pro-firefox-*.zip` for Firefox temporary/manual install.
+- `soft98-pro.user.js` for userscript managers.
 
 ## Build
 
@@ -13,9 +21,11 @@ npm run ci
 
 Build outputs:
 
+- `soft98-pro.user.js`: root userscript for raw GitHub install/update.
+- `dist/userscript/soft98-pro.user.js`: release userscript copy.
 - `dist/chromium`: Manifest V3 build for Chrome and Edge.
-- `dist/firefox`: Firefox build with an injected page runtime.
-- `dist/packages/*.zip`: packaged artifacts for manual installation or release upload.
+- `dist/firefox`: Firefox build with early page-runtime injection.
+- `dist/packages/*.zip`: release-ready ZIPs.
 
 ## Install Unpacked
 
@@ -31,8 +41,10 @@ Firefox:
 2. Load Temporary Add-on.
 3. Select `dist/firefox/manifest.json`.
 
-## Design
+## Runtime
 
-The extension keeps Soft98-specific detection resilient by favoring behavior, structure, script signatures, and link preservation over generated class names or short random identifiers.
+The runtime favors behavior, structure, script signatures, and link preservation over generated class names or short random identifiers.
 
-The page runtime also exposes `window.Soft98AdBlocker.report()`, `trapCheck()`, `resetHandles()`, `events`, and `stats` for console diagnostics.
+User-facing UI uses Persian when the browser language starts with `fa` or the browser timezone is `Asia/Tehran`; otherwise it uses English.
+
+Console diagnostics are available through `window.Soft98AdBlocker.report()`, `trapCheck()`, `resetHandles()`, `events`, and `stats`.

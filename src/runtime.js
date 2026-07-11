@@ -8,9 +8,57 @@
   const enqueueMicrotask = window.queueMicrotask ? window.queueMicrotask.bind(window) : (callback) => Promise.resolve().then(callback);
   const nativeEval = typeof window.eval === "function" ? window.eval : null;
   const nativeFetch = window.fetch ? window.fetch.bind(window) : null;
+  const IS_EXTENSION = "__SOFT98_BUILD_TARGET__" === "extension";
+  const RECOMMEND_EXTENSION = "__SOFT98_RECOMMEND_EXTENSION__" !== "false";
   const STORAGE_KEY = "soft98-ad-blocker.settings";
   const PIRATE_LOGO = "https://user-images.githubusercontent.com/4673812/50543067-1f2b7680-0be1-11e9-9daa-92828b24448e.png";
-  const EXTENSION_REPO = "https://github.com/DRSDavidSoft/soft98-ad-blocker-extension";
+  const EXTENSION_REPO = "https://github.com/DRSDavidSoft/soft98-pro";
+  const LOCALE = preferredLocale();
+  const RTL = LOCALE === "fa";
+  const STRINGS = {
+    en: {
+      product: "Soft98 Pro",
+      ready: "ready",
+      blockAds: "Block ads",
+      patchScripts: "Patch Soft98 code",
+      pro: "Enable Pro",
+      darkDesign: "Modern dark design",
+      linkBadges: "Download badges",
+      pirateLogo: "Pirate logo",
+      taunt: "Professional challenge",
+      diagnostics: "Console diagnostics",
+      recommendExtension: "Recommend extension",
+      scanNow: "Scan now",
+      close: "Close",
+      extensionTitle: "Browser extension is ready",
+      extensionBody: "Install the extension for more precise control, richer settings, and steadier execution in Chrome, Edge, and Firefox.",
+      extensionLink: "Get Soft98 Pro",
+      tauntText:
+        'Ads removed, links preserved, and the anti-blocking test answered with clean engineering. <a rel="nofollow" target="_blank" href="https://github.com/DRSDavidSoft/soft98-pro/blob/main/soft98-pro.user.js">Soft98 Pro</a>',
+      successLog: "The page kept its content. The ads did not. Challenge accepted with clean instruments.",
+    },
+    fa: {
+      product: "Soft98 Pro",
+      ready: "آماده",
+      blockAds: "حذف تبلیغات",
+      patchScripts: "اصلاح کد Soft98",
+      pro: "فعال‌سازی Pro",
+      darkDesign: "طراحی تیره مدرن",
+      linkBadges: "نشان لینک دانلود",
+      pirateLogo: "لوگوی جایگزین",
+      taunt: "پیام موفقیت حرفه‌ای",
+      diagnostics: "گزارش کنسول",
+      recommendExtension: "پیشنهاد افزونه",
+      scanNow: "بررسی دوباره",
+      close: "بستن",
+      extensionTitle: "نسخه افزونه مرورگر آماده است",
+      extensionBody: "برای کنترل دقیق‌تر، تنظیمات بیشتر، و اجرای مطمئن‌تر در Chrome، Edge و Firefox می‌توانید نسخه افزونه را نصب کنید.",
+      extensionLink: "دریافت Soft98 Pro",
+      tauntText:
+        'تبلیغات حذف شد، لینک‌ها سالم ماندند، و آزمون ضد‌مسدودسازی با احترام فنی پاسخ داده شد. <a rel="nofollow" target="_blank" href="https://github.com/DRSDavidSoft/soft98-pro/blob/main/soft98-pro.user.js">Soft98 Pro</a>',
+      successLog: "محتوای صفحه ماند، تبلیغات نماند. چالش با ابزار تمیز پاسخ داده شد.",
+    },
+  };
   const DEFAULT_SETTINGS = {
     blockAds: true,
     patchScripts: true,
@@ -21,7 +69,7 @@
     pirateLogo: true,
     taunt: true,
     diagnostics: true,
-    recommendExtension: false,
+    recommendExtension: RECOMMEND_EXTENSION,
   };
   const savedHref = new WeakMap();
   const trackedLinks = new Set();
@@ -64,6 +112,7 @@
       ".tbdc",
       ".trk_irk",
       ".tooltip",
+      ".alert-warning",
       "[class*='d-darkreader-inline-block']",
       "[class*='dlgbdinline-block']",
       "[class*='dlgrkinline-block']",
@@ -77,7 +126,7 @@
   const BLOCKED_URL = /(?:kaprila\.com|buysellads|\/ads?(?:\/|\.|$)|adservice|advertisement)/i;
   const BAD_HREF = /^(?:\s*|#|javascript:|void\(0\)|about:blank)$/i;
   const WARNING_TEXT =
-    /(?:افزونه\s+حذف\s+(?:تبلیغات|ﺗﺒﻠﻴﻐﺎت)|فیلترشک|Dark Reader|SMostafaMoosavi|VPN|ریفرش\s+کنید|غیرفعال\s+کنید|disable\s+ad-?block|adblocker?)/i;
+    /(?:افزونه\s+حذف\s+(?:تبلیغات|ﺗﺒﻠﻴﻐﺎت|تبل\S{0,6}غات)|فیلترشک|Dark Reader|SMostafaMoosavi|VPN|ریفرش\s+کنید|غیرفعال\s+کنید|disable\s+ad-?block|adblocker?)/i;
   const PERSIAN_BLOCKER_NOTICE =
     /(?:PersianBlocker|Persian\s*Blocker|MasterKia|آزادی\s+کاربران|چه\s+چیزی\s+وارد\s+مرورگر|هشدار\s+از\s+طرف\s+لیست\s+PersianBlocker|برگرداندن\s+آزادی\s+کاربران)/i;
   const WARNING_TITLE = /(?:افزونه\s+حذف|ﺗﺒﻠﻴﻐﺎت|VPN|فیلترشک|Dark Reader|ad-?block)/i;
@@ -88,6 +137,19 @@
   function onReady(callback) {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", callback, { once: true });
     else callback();
+  }
+
+  function preferredLocale() {
+    const languages = [navigator.language || "", ...(navigator.languages || [])].filter(Boolean);
+    let timeZone = "";
+    try {
+      timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    } catch (_error) {}
+    return languages.some((language) => /^fa(?:-|$)/i.test(language)) || timeZone === "Asia/Tehran" ? "fa" : "en";
+  }
+
+  function text(key) {
+    return (STRINGS[LOCALE] && STRINGS[LOCALE][key]) || STRINGS.en[key] || key;
   }
 
   function readSettings() {
@@ -103,7 +165,7 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
-      safeConsole("warn", "Soft98 Ad Blocker could not persist settings", error);
+      safeConsole("warn", "Soft98 Pro could not persist settings", error);
     }
     installProStyle();
     renderControlPanel();
@@ -124,7 +186,7 @@
     if (eventLog.length > 80) eventLog.shift();
     safeConsole(
       level,
-      "%cSoft98 Ad Blocker%c " + message,
+      "%cSoft98 Pro%c " + message,
       "background:#101820;color:#92e6a7;padding:2px 6px;border-radius:5px;font-weight:700",
       "color:#9fb3c8",
       detail || ""
@@ -137,17 +199,17 @@
       if (nativeEval) return Function.prototype.call.call(nativeEval, thisArg || window, source);
     } catch (error) {
       recordPatchFailure("native-eval", error, source);
-      safeConsole("warn", "Soft98 Ad Blocker native eval failed; retrying indirectly", error);
+      safeConsole("warn", "Soft98 Pro native eval failed; retrying indirectly", error);
     }
     try {
       return (0, eval)(source);
     } catch (error) {
       recordPatchFailure("indirect-eval", error, source);
       if (typeof fallbackSource === "string" && fallbackSource !== source) {
-        safeConsole("warn", "Soft98 Ad Blocker patched script failed; trying original source once", error);
+        safeConsole("warn", "Soft98 Pro patched script failed; trying original source once", error);
         return safeEval(fallbackSource, thisArg);
       }
-      safeConsole("warn", "Soft98 Ad Blocker eval skipped invalid script instead of breaking the page", error);
+      safeConsole("warn", "Soft98 Pro eval skipped invalid script instead of breaking the page", error);
       return undefined;
     }
   }
@@ -376,32 +438,61 @@
     if (!element || element === document.documentElement || element === document.body) return false;
     const text = (element.textContent || "").replace(/\s+/g, " ").trim();
     if (!WARNING_TEXT.test(text)) return false;
+    if (isProtectedContentContainer(element)) return false;
     if (element.matches(SELECTORS.warningCandidates)) return true;
     if (element.classList.contains("dbdnone")) return true;
-    return Boolean(element.querySelector("a[href*='support'], a[href*='SMostafa'], a[href*='telegram']"));
+    return isCompactNotice(element) && Boolean(element.querySelector("a[href*='support'], a[href*='SMostafa'], a[href*='telegram']"));
   }
 
   function isExternalBlockerNotice(node) {
     const element = asElement(node);
     if (!element || element === document.documentElement || element === document.body) return false;
+    if (isProtectedContentContainer(element)) return false;
     const text = (element.textContent || "").replace(/\s+/g, " ").trim();
     const inline = [element.id, element.className, element.getAttribute("style"), element.getAttribute("href")].join(" ");
     if (!PERSIAN_BLOCKER_NOTICE.test(`${text} ${inline}`)) return false;
     const box = visibleBox(element);
     const fixed = /(?:^|;)\s*position\s*:\s*(?:fixed|sticky)/i.test(element.getAttribute("style") || "") || getComputedStyle(element).position === "fixed";
     const intrusive = fixed || box.height >= 40 || box.width >= Math.min(320, Math.round(window.innerWidth * 0.45));
-    return intrusive || Boolean(element.querySelector("a[href*='PersianBlocker'], a[href*='MasterKia']"));
+    return (intrusive || Boolean(element.querySelector("a[href*='PersianBlocker'], a[href*='MasterKia']"))) && isCompactNotice(element);
+  }
+
+  function isProtectedContentContainer(element) {
+    if (!element || !element.querySelectorAll) return false;
+    if (element.matches("html,body,main,article,#content,#main,.content,.main,.entry,.post,.download-list,.download-list-item")) return true;
+    if (element.querySelector("main,article,#content,#main,.content,.main,.entry,.post,.download-list,.download-list-item")) return true;
+    const links = element.querySelectorAll("a[href]");
+    if (links.length >= 5) return true;
+    return Boolean(element.querySelector(SELECTORS.links));
+  }
+
+  function isCompactNotice(element) {
+    const text = (element.textContent || "").replace(/\s+/g, " ").trim();
+    const box = visibleBox(element);
+    const fixed = getComputedStyle(element).position === "fixed" || getComputedStyle(element).position === "sticky";
+    if (fixed) return text.length < 1800;
+    if (!box.width && !box.height) return text.length < 800;
+    const viewportArea = Math.max(1, window.innerWidth * window.innerHeight);
+    const area = Math.max(1, box.width * box.height);
+    return text.length < 1000 && area < viewportArea * 0.35;
   }
 
   function removeWarnings(root) {
     const element = asElement(root) || document;
-    const candidates = [];
-    if (isWarningNode(element)) candidates.push(element);
-    if (element.querySelectorAll) candidates.push(...element.querySelectorAll(SELECTORS.warningCandidates));
+    const candidates = new Set();
+    if (isWarningNode(element)) candidates.add(element);
+    if (element.querySelectorAll) element.querySelectorAll(SELECTORS.warningCandidates).forEach((candidate) => candidates.add(candidate));
     if (element.querySelectorAll) {
-      candidates.push(...element.querySelectorAll("div,section,aside,header,footer,a,p,span"));
+      element.querySelectorAll("div,section,aside,header,footer,a,p,span").forEach((candidate) => candidates.add(candidate));
     }
-    for (const candidate of candidates) {
+    const ordered = [...candidates].sort((left, right) => {
+      const leftText = (left.textContent || "").length;
+      const rightText = (right.textContent || "").length;
+      if (leftText !== rightText) return leftText - rightText;
+      return domDepth(right) - domDepth(left);
+    });
+    for (const candidate of ordered) {
+      if (!document.contains(candidate)) continue;
       if (isWarningNode(candidate)) {
         candidate.remove();
         stats.warningsRemoved += 1;
@@ -416,6 +507,12 @@
     if (hash && WARNING_TITLE.test(hash)) history.replaceState(null, document.title, `${location.pathname}${location.search}`);
     if (!originalTitle && document.title && !WARNING_TITLE.test(document.title)) originalTitle = document.title;
     if (originalTitle && WARNING_TITLE.test(document.title)) document.title = originalTitle;
+  }
+
+  function domDepth(element) {
+    let depth = 0;
+    for (let node = element; node && node.parentElement; node = node.parentElement) depth += 1;
+    return depth;
   }
 
   function processRoot(root) {
@@ -483,7 +580,7 @@
       if (!document.contains(link) || link.querySelector(".soft98-pro-link-badge")) continue;
       const badge = document.createElement("span");
       badge.className = "soft98-pro-link-badge";
-      badge.textContent = "ready";
+      badge.textContent = text("ready");
       link.appendChild(badge);
     }
   }
@@ -494,7 +591,7 @@
     if (!logo || logo.getAttribute("data-soft98-original-logo")) return;
     logo.setAttribute("data-soft98-original-logo", logo.src || "");
     logo.src = PIRATE_LOGO;
-    logo.alt = "Soft98 Ad Blocker";
+    logo.alt = text("product");
   }
 
   function addTaunt() {
@@ -502,10 +599,9 @@
     const footer = document.querySelector("footer, [class*='footer']") || document.body;
     const note = document.createElement("div");
     note.id = "soft98-ad-blocker-taunt";
-    note.dir = "rtl";
+    note.dir = RTL ? "rtl" : "ltr";
     note.style.cssText = "margin:14px auto;padding:10px 14px;max-width:780px;border:1px solid rgba(112,225,178,.35);border-radius:8px;background:rgba(8,17,26,.88);color:#dfffee;text-align:center;font:13px/1.8 system-ui,sans-serif";
-    note.innerHTML =
-      'تبلیغات حذف شد، لینک‌ها سالم ماندند، و آزمون ضد‌مسدودسازی با احترام فنی پاسخ داده شد. <a rel="nofollow" target="_blank" href="https://github.com/DRSDavidSoft/user-scripts/blob/master/soft98_ad-blocker.user.js">Soft98 Ad Blocker</a>';
+    note.innerHTML = text("tauntText");
     footer.appendChild(note);
   }
 
@@ -517,23 +613,23 @@
     wrap.id = "soft98-pro-control";
     wrap.dir = "ltr";
     wrap.innerHTML = `
-      <button type="button" data-role="toggle" aria-label="Soft98 Pro">☠</button>
+      <button type="button" data-role="toggle" aria-label="${text("product")}">☠</button>
       <form hidden>
-        <header><strong>Soft98 Pro</strong><small>${VERSION}</small></header>
+        <header><strong>${text("product")}</strong><small>${VERSION}</small></header>
         ${[
-          ["blockAds", "Block ads"],
-          ["patchScripts", "Patch Soft98 code"],
-          ["pro", "Enable Pro"],
-          ["darkDesign", "Modern dark design"],
-          ["linkBadges", "Download badges"],
-          ["pirateLogo", "Pirate logo"],
-          ["taunt", "Professional taunt"],
-          ["diagnostics", "Console diagnostics"],
-          ["recommendExtension", "Recommend extension"],
+          ["blockAds", text("blockAds")],
+          ["patchScripts", text("patchScripts")],
+          ["pro", text("pro")],
+          ["darkDesign", text("darkDesign")],
+          ["linkBadges", text("linkBadges")],
+          ["pirateLogo", text("pirateLogo")],
+          ["taunt", text("taunt")],
+          ["diagnostics", text("diagnostics")],
+          ["recommendExtension", text("recommendExtension")],
         ]
           .map(([key, label]) => `<label><input type="checkbox" name="${key}" ${settings[key] ? "checked" : ""}>${label}</label>`)
           .join("")}
-        <footer><button type="button" data-role="scan">Scan now</button><button type="button" data-role="close">Close</button></footer>
+        <footer><button type="button" data-role="scan">${text("scanNow")}</button><button type="button" data-role="close">${text("close")}</button></footer>
       </form>
     `;
     const style = document.createElement("style");
@@ -574,7 +670,7 @@
     if (settings.taunt) {
       safeConsole(
         "info",
-        "%cSoft98 Ad Blocker%c The page kept its content. The ads did not. Challenge accepted with clean instruments.",
+        "%cSoft98 Pro%c " + text("successLog"),
         "background:#70e1b2;color:#06120c;padding:4px 8px;border-radius:6px;font-weight:800",
         "color:#9db1c6"
       );
@@ -590,11 +686,11 @@
     if (!settings.recommendExtension || document.getElementById("soft98-extension-recommendation")) return;
     const panel = document.createElement("aside");
     panel.id = "soft98-extension-recommendation";
-    panel.dir = "rtl";
+    panel.dir = RTL ? "rtl" : "ltr";
     panel.innerHTML = `
-      <strong>نسخه افزونه مرورگر آماده است</strong>
-      <span>برای کنترل دقیق‌تر، تنظیمات بیشتر، و اجرای مطمئن‌تر در Chrome، Edge و Firefox می‌توانید نسخه افزونه را نصب کنید.</span>
-      <a rel="noopener noreferrer" target="_blank" href="${EXTENSION_REPO}">دریافت افزونه Soft98 Ad Blocker</a>
+      <strong>${text("extensionTitle")}</strong>
+      <span>${text("extensionBody")}</span>
+      <a rel="noopener noreferrer" target="_blank" href="${EXTENSION_REPO}">${text("extensionLink")}</a>
       <button type="button" aria-label="Dismiss">×</button>
     `;
     const style = document.createElement("style");
@@ -793,7 +889,7 @@
       if (node.tagName === "IMG" && !node.getAttribute("src")) trips.push("source-less image");
       if (trips.length) report.push({ node, trips, box });
     }
-    safeConsole("groupCollapsed", `Soft98 Ad Blocker trap check: ${report.length} suspicious node(s)`);
+    safeConsole("groupCollapsed", `Soft98 Pro trap check: ${report.length} suspicious node(s)`);
     for (const item of report) safeConsole("warn", item.node, item.trips, item.box);
     safeConsole("groupEnd");
     return report;
@@ -812,14 +908,16 @@
       })),
       events: [...eventLog],
     };
-    safeConsole("info", "Soft98 Ad Blocker diagnostics", report);
+    safeConsole("info", "Soft98 Pro diagnostics", report);
     return report;
   }
 
   function init() {
-    window.__Soft98AdBlockerExtension = true;
-    document.documentElement.setAttribute("data-soft98-ad-blocker-extension", VERSION);
-    window.dispatchEvent(new CustomEvent("soft98-ad-blocker:extension-ready", { detail: { version: VERSION } }));
+    if (IS_EXTENSION) {
+      window.__Soft98AdBlockerExtension = true;
+      document.documentElement.setAttribute("data-soft98-ad-blocker", VERSION);
+      window.dispatchEvent(new CustomEvent("soft98-ad-blocker:extension-ready", { detail: { version: VERSION } }));
+    }
     resetDocumentHandles();
     installEvalHijack();
     installScriptHijack();
@@ -837,7 +935,7 @@
     });
   }
 
-  window.Soft98AdBlocker = {
+  const publicApi = {
     version: VERSION,
     get settings() {
       return { ...settings };
@@ -866,5 +964,26 @@
     },
   };
 
+  function exposePublicApi() {
+    for (const name of ["Soft98AdBlocker", "Soft98Pro"]) {
+      try {
+        if (window[name] === publicApi) continue;
+        Object.defineProperty(window, name, {
+          value: publicApi,
+          configurable: true,
+          enumerable: false,
+          writable: false,
+        });
+      } catch (_error) {
+        try {
+          window[name] = publicApi;
+        } catch (__error) {}
+      }
+    }
+  }
+
+  exposePublicApi();
   init();
+  window.setTimeout(exposePublicApi, 0);
+  window.setTimeout(exposePublicApi, 1000);
 })();

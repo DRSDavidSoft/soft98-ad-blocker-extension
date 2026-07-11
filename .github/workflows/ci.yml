@@ -1,17 +1,20 @@
-name: Soft98 Ad Blocker Extension
+name: Soft98 Pro
 
 on:
   push:
     branches: [main, master]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
+  release:
+    types: [published]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
-    name: Build Browser Packages
+    name: Build Install Packages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,13 +35,34 @@ jobs:
       - name: Upload Chromium package
         uses: actions/upload-artifact@v4
         with:
-          name: soft98-ad-blocker-chromium
-          path: dist/packages/soft98-ad-blocker-chromium-*.zip
+          name: soft98-pro-chromium
+          path: dist/packages/soft98-pro-chromium-*.zip
           if-no-files-found: error
 
       - name: Upload Firefox package
         uses: actions/upload-artifact@v4
         with:
-          name: soft98-ad-blocker-firefox
-          path: dist/packages/soft98-ad-blocker-firefox-*.zip
+          name: soft98-pro-firefox
+          path: dist/packages/soft98-pro-firefox-*.zip
           if-no-files-found: error
+
+      - name: Upload userscript package
+        uses: actions/upload-artifact@v4
+        with:
+          name: soft98-pro-userscript
+          path: |
+            soft98-pro.user.js
+            dist/packages/soft98-pro-userscript-*.zip
+          if-no-files-found: error
+
+      - name: Publish release assets
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" \
+            dist/packages/soft98-pro-chromium-*.zip \
+            dist/packages/soft98-pro-firefox-*.zip \
+            dist/packages/soft98-pro-userscript-*.zip \
+            soft98-pro.user.js \
+            --clobber

@@ -10,12 +10,15 @@ const ROOT = path.resolve(__dirname, "..");
 const SRC = path.join(ROOT, "src");
 const DIST = path.join(ROOT, "dist");
 const VERSION = require(path.join(ROOT, "package.json")).version;
+const RUNTIME = path.join(SRC, "runtime.js");
+const META = path.join(SRC, "meta.txt");
+const USERSCRIPT_OUT = path.join(ROOT, "soft98-pro.user.js");
 
 const commonManifest = {
-  name: "Soft98 Ad Blocker",
-  short_name: "Soft98 Blocker",
+  name: "Soft98 Pro",
+  short_name: "Soft98 Pro",
   version: VERSION.replace(/[^\d.]/g, ""),
-  description: "Resilient Soft98 ad blocking, anti-adblock patching, download recovery, and Soft98 Pro enhancements.",
+  description: "Soft98 Pro enhancements, ad blocking, anti-adblock patching, and download recovery.",
 };
 
 function rmrf(target) {
@@ -31,8 +34,14 @@ function copyFile(from, to) {
   fs.copyFileSync(from, to);
 }
 
-async function minifyFile(from, to) {
-  const source = fs.readFileSync(from, "utf8");
+function runtimeSource(target) {
+  return fs
+    .readFileSync(RUNTIME, "utf8")
+    .replaceAll("__SOFT98_BUILD_TARGET__", target)
+    .replaceAll("__SOFT98_RECOMMEND_EXTENSION__", target === "extension" ? "false" : "true");
+}
+
+async function minifySource(source, to) {
   const result = await terser.minify(source, {
     compress: { passes: 2, unsafe: false },
     mangle: { keep_fnames: /soft98/i },
@@ -41,6 +50,24 @@ async function minifyFile(from, to) {
   if (result.error) throw result.error;
   mkdir(path.dirname(to));
   fs.writeFileSync(to, `${result.code}\n`, "utf8");
+}
+
+async function minifyFile(from, to) {
+  await minifySource(fs.readFileSync(from, "utf8"), to);
+}
+
+async function buildUserscript() {
+  const meta = fs.readFileSync(META, "utf8").trim();
+  const result = await terser.minify(runtimeSource("userscript"), {
+    compress: { passes: 2, unsafe: false },
+    mangle: { keep_fnames: /soft98AdBlocker|patchSoft98Code/ },
+    format: { ascii_only: false, comments: false },
+  });
+  if (result.error) throw result.error;
+  const output = `${meta}\n\n${result.code}\n`;
+  fs.writeFileSync(USERSCRIPT_OUT, output, "utf8");
+  mkdir(path.join(DIST, "userscript"));
+  fs.writeFileSync(path.join(DIST, "userscript", "soft98-pro.user.js"), output, "utf8");
 }
 
 function writeJson(target, value) {
@@ -54,7 +81,7 @@ function chromiumManifest() {
     ...commonManifest,
     permissions: ["storage", "tabs"],
     host_permissions: ["*://*.soft98.ir/*"],
-    action: { default_title: "Soft98 Ad Blocker", default_popup: "popup.html" },
+    action: { default_title: "Soft98 Pro", default_popup: "popup.html" },
     options_page: "options.html",
     content_scripts: [
       {
@@ -78,12 +105,12 @@ function firefoxManifest() {
     ...commonManifest,
     applications: {
       gecko: {
-        id: "soft98-ad-blocker@drsdavidsoft.github.io",
+        id: "soft98-pro@drsdavidsoft.github.io",
         strict_min_version: "109.0",
       },
     },
     permissions: ["storage", "tabs", "*://*.soft98.ir/*"],
-    browser_action: { default_title: "Soft98 Ad Blocker", default_popup: "popup.html" },
+    browser_action: { default_title: "Soft98 Pro", default_popup: "popup.html" },
     options_ui: { page: "options.html", open_in_tab: true },
     web_accessible_resources: ["assets/runtime.page.js"],
     content_scripts: [
@@ -120,19 +147,21 @@ async function buildTarget(name, manifest) {
   mkdir(path.join(target, "assets"));
   writeJson(path.join(target, "manifest.json"), manifest);
   copyUi(target);
-  await minifyFile(path.join(SRC, "page", "runtime.js"), path.join(target, "assets", "runtime.page.js"));
+  await minifySource(runtimeSource("extension"), path.join(target, "assets", "runtime.page.js"));
   await minifyFile(path.join(SRC, "content", "bridge.js"), path.join(target, "assets", "bridge.js"));
   if (name === "firefox") {
     await minifyFile(path.join(SRC, "content", "firefox-injector.js"), path.join(target, "assets", "firefox-injector.js"));
   }
-  await zipDirectory(target, path.join(DIST, "packages", `soft98-ad-blocker-${name}-${VERSION}.zip`));
+  await zipDirectory(target, path.join(DIST, "packages", `soft98-pro-${name}-${VERSION}.zip`));
 }
 
 async function main() {
   rmrf(DIST);
+  await buildUserscript();
   await buildTarget("chromium", chromiumManifest());
   await buildTarget("firefox", firefoxManifest());
-  console.log(`Built extension packages in ${path.relative(ROOT, DIST)}`);
+  await zipDirectory(path.join(DIST, "userscript"), path.join(DIST, "packages", `soft98-pro-userscript-${VERSION}.zip`));
+  console.log(`Built Soft98 packages in ${path.relative(ROOT, DIST)}`);
 }
 
 main().catch((error) => {

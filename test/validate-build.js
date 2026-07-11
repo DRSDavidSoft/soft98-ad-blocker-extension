@@ -6,6 +6,7 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 const DIST = path.join(ROOT, "dist");
+const VERSION = require(path.join(ROOT, "package.json")).version;
 const required = [
   "chromium/manifest.json",
   "chromium/assets/runtime.page.js",
@@ -16,6 +17,10 @@ const required = [
   "firefox/assets/bridge.js",
   "firefox/assets/firefox-injector.js",
   "firefox/options.html",
+  "userscript/soft98-pro.user.js",
+  `packages/soft98-pro-chromium-${VERSION}.zip`,
+  `packages/soft98-pro-firefox-${VERSION}.zip`,
+  `packages/soft98-pro-userscript-${VERSION}.zip`,
 ];
 
 for (const file of required) {
@@ -32,9 +37,14 @@ if (!chromium.content_scripts.some((entry) => entry.world === "MAIN")) {
 }
 
 const runtime = fs.readFileSync(path.join(DIST, "chromium", "assets", "runtime.page.js"), "utf8");
+const userscript = fs.readFileSync(path.join(ROOT, "soft98-pro.user.js"), "utf8");
 for (const needle of ["fbd", "abdd", "error_abdd", "fbd--compiled"]) {
   if (runtime.includes(needle)) throw new Error(`Fragile generated Soft98 identifier leaked into runtime: ${needle}`);
+  if (userscript.includes(needle)) throw new Error(`Fragile generated Soft98 identifier leaked into userscript: ${needle}`);
 }
 if (!/PersianBlocker|MasterKia/.test(runtime)) throw new Error("PersianBlocker notice handling is missing");
+if (!userscript.includes("DRSDavidSoft/soft98-pro/main/soft98-pro.user.js")) {
+  throw new Error("Userscript update URL must point at the dedicated Soft98 repo");
+}
 
-console.log("Extension build validation passed");
+console.log("Soft98 build validation passed");
