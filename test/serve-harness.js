@@ -29,6 +29,7 @@ http
       if (requestUrl.pathname === "/live") {
         const target = requestUrl.searchParams.get("url") || DEFAULT_LIVE_URL;
         const proofView = requestUrl.searchParams.get("view") || "";
+        const proofPanel = requestUrl.searchParams.get("panel") === "1";
         const upstream = await fetch(target, {
           headers: {
             "user-agent": "Mozilla/5.0 Soft98AdBlockerProof",
@@ -39,6 +40,7 @@ http
         const proofScript = `<script src="http://127.0.0.1:${PORT}/soft98-pro.user.js"></script><script>
             (function () {
               var proofView = ${JSON.stringify(proofView)};
+              var proofPanel = ${JSON.stringify(proofPanel)};
               function ready(callback) {
                 if (document.body) callback();
                 else document.addEventListener("DOMContentLoaded", callback, { once: true });
@@ -101,6 +103,9 @@ http
                 overlay.style.cssText = "position:fixed;z-index:2147483647;left:16px;bottom:16px;display:grid;gap:6px;max-width:560px;padding:12px 14px;border:1px solid #245a38;border-radius:8px;background:#08140d;color:#dbffe5;font:13px/1.45 ui-monospace,Consolas,monospace;box-shadow:0 10px 35px rgba(0,0,0,.35)";
                 overlay.innerHTML = "<strong>Soft98 Pro live proof</strong><span>ads: " + ads + "</span><span>warnings: " + warnings + "</span><span>download links: " + links.length + "</span><span>first href: " + (first ? first.href : "none") + "</span>";
                 (document.body || document.documentElement).appendChild(overlay);
+                if (proofPanel && window.Soft98AdBlocker && window.Soft98AdBlocker.openPanel) {
+                  window.Soft98AdBlocker.openPanel();
+                }
               }, 1800);
             });
             })();

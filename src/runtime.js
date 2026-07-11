@@ -11,7 +11,11 @@
   const nativeFetch = window.fetch ? window.fetch.bind(window) : null;
   const IS_EXTENSION = "__SOFT98_BUILD_TARGET__" === "extension";
   const STORAGE_KEY = "soft98-ad-blocker.settings";
-  const PIRATE_LOGO = "https://user-images.githubusercontent.com/4673812/50543067-1f2b7680-0be1-11e9-9daa-92828b24448e.png";
+  const PIRATE_LOGO =
+    "data:image/svg+xml;charset=UTF-8," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M42 71c-14-9-19-26-11-41 9-18 35-21 49-7 13-15 39-12 49 6 8 15 3 33-11 42" fill="#eef7ff" stroke="#0b1722" stroke-width="4"/><path d="M51 57h18M91 57h18" stroke="#0b1722" stroke-width="8"/><path d="M80 64l-7 14h14z" fill="#0b1722" stroke="#0b1722" stroke-width="2"/><path d="M48 88l68-68M112 88L44 21" stroke="#74e0b0" stroke-width="7"/><path d="M155 35h38c23 0 36 10 36 27 0 18-14 28-38 28h-36z" fill="#74e0b0" stroke="#0b1722" stroke-width="4"/><path d="M164 51h28c11 0 17 4 17 12s-6 12-17 12h-28z" fill="#0b1722"/></g><text x="242" y="55" fill="#eef7ff" font-family="Arial, sans-serif" font-size="30" font-weight="800">Soft98</text><text x="244" y="86" fill="#74e0b0" font-family="Arial, sans-serif" font-size="27" font-weight="800">Pro</text></svg>'
+    );
   const EXTENSION_REPO = "https://github.com/DRSDavidSoft/soft98-pro";
   const LOCALE = preferredLocale();
   const RTL = LOCALE === "fa";
@@ -571,6 +575,9 @@
       .soft98-pro-theme .dbddi,.soft98-pro-theme [class*="dropdown"] a{color:var(--s98p-text)!important}
       .soft98-pro-theme .dbddi:hover,.soft98-pro-theme [class*="dropdown"] a:hover{background:var(--s98p-soft)!important;color:#ffffff!important}
       .soft98-pro-theme .active,.soft98-pro-theme .nav-link.active,.soft98-pro-theme .nav-tabs .active,.soft98-pro-theme .tbdbp.active,.soft98-pro-theme [class*="active"]{background:var(--s98p-soft)!important;border-color:var(--s98p-border)!important;color:var(--s98p-text)!important}
+      .soft98-pro-theme [data-toggle="tab"],.soft98-pro-theme a[data-toggle="tab"],.soft98-pro-theme [role="tab"],.soft98-pro-theme .nav-tabs a,.soft98-pro-theme .tbdbp,.soft98-pro-theme .tbdbp.f,.soft98-pro-theme .tbdbp.s{background:var(--s98p-bg-2)!important;background-image:none!important;border-color:var(--s98p-border)!important;color:var(--s98p-text)!important}
+      .soft98-pro-theme [data-toggle="tab"].active,.soft98-pro-theme [data-toggle="tab"][aria-selected="true"],.soft98-pro-theme [role="tab"].active,.soft98-pro-theme .nav-tabs .active,.soft98-pro-theme .tbdbp.active{background:linear-gradient(180deg,var(--s98p-soft),var(--s98p-surface))!important;background-image:linear-gradient(180deg,var(--s98p-soft),var(--s98p-surface))!important;border-color:#537695!important;color:#ffffff!important}
+      .soft98-pro-theme [data-toggle="tab"] *,.soft98-pro-theme [role="tab"] *{background:transparent!important;color:inherit!important}
       .soft98-pro-theme .cbd,.soft98-pro-theme .rbd,.soft98-pro-theme .cbdd,.soft98-pro-theme .cbddb,.soft98-pro-theme .tbdbc,.soft98-pro-theme .tbdbp,.soft98-pro-theme .bbdl,.soft98-pro-theme .cbdtis,.soft98-pro-theme .breadcrumb,.soft98-pro-theme article,.soft98-pro-theme aside,.soft98-pro-theme section,.soft98-pro-theme [class*="card"],.soft98-pro-theme [class*="box"],.soft98-pro-theme [class*="panel"]{background:var(--s98p-surface)!important;border-color:var(--s98p-border)!important;color:var(--s98p-text)!important;box-shadow:0 16px 42px rgba(0,0,0,.24)}
       .soft98-pro-theme .cbddh,.soft98-pro-theme h1,.soft98-pro-theme h2,.soft98-pro-theme h3,.soft98-pro-theme h4,.soft98-pro-theme strong{color:#f7fbff!important}
       .soft98-pro-theme .cbdtlk,.soft98-pro-theme .cbdtim,.soft98-pro-theme .list-group-item,.soft98-pro-theme .media,.soft98-pro-theme .cbdmd118,.soft98-pro-theme dt,.soft98-pro-theme dd{background:var(--s98p-bg-2)!important;border-color:rgba(116,224,176,.22)!important;color:var(--s98p-text)!important}
@@ -584,6 +591,25 @@
       .soft98-pro-theme pre,.soft98-pro-theme code{background:#071018!important;border-color:var(--s98p-border)!important;color:#d8f8ff!important}
       .soft98-pro-theme [style*="background:#fff"],.soft98-pro-theme [style*="background: #fff"],.soft98-pro-theme [style*="background-color:#fff"],.soft98-pro-theme [style*="background-color: #fff"]{background:var(--s98p-surface)!important}
       .soft98-pro-theme [style*="color:#000"],.soft98-pro-theme [style*="color: #000"],.soft98-pro-theme [style*="color:black"],.soft98-pro-theme [style*="color: black"]{color:var(--s98p-text)!important}
+      .soft98-pro-theme .fa,.soft98-pro-theme [class^="fa-"],.soft98-pro-theme [class*=" fa-"]{font-family:Arial,sans-serif!important;font-style:normal!important;font-weight:800!important;text-rendering:auto}
+      .soft98-pro-theme .fa:before,.soft98-pro-theme [class^="fa-"]:before,.soft98-pro-theme [class*=" fa-"]:before,.soft98-pro-theme .lbddsl:before,.soft98-pro-theme .cbddlv:before{content:"i"!important;display:inline-flex;align-items:center;justify-content:center;min-width:1em;font-family:Arial,sans-serif!important;font-style:normal!important;font-weight:800!important;text-rendering:auto}
+      .soft98-pro-theme .fa-moon-o:before{content:"M"!important}
+      .soft98-pro-theme .fa-notifications-active:before{content:"!"!important}
+      .soft98-pro-theme .fa-mail:before{content:"@"!important}
+      .soft98-pro-theme .fa-user-circle-o:before{content:"U"!important}
+      .soft98-pro-theme .fa-desktop-alt:before{content:"PC"!important;font-size:.72em}
+      .soft98-pro-theme .fa-android:before{content:"A"!important}
+      .soft98-pro-theme .fa-clouddbdl:before{content:"CL"!important;font-size:.72em}
+      .soft98-pro-theme .fa-crack:before{content:"*"!important}
+      .soft98-pro-theme .fa-file:before{content:"F"!important}
+      .soft98-pro-theme .fa-comment-o:before{content:"C"!important}
+      .soft98-pro-theme .lbddsl:before{content:"L"!important}
+      .soft98-pro-theme .lbddsl[href*="linkdoni"]:before{content:"LD"!important;font-size:.68em}
+      .soft98-pro-theme .lbddsl[href*="rss"]:before{content:"RSS"!important;font-size:.68em}
+      .soft98-pro-theme .lbddsl[href*="twitter"]:before,.soft98-pro-theme .lbddsl[href*="x.com"]:before{content:"X"!important}
+      .soft98-pro-theme .lbddsl[href*="facebook"]:before{content:"f"!important}
+      .soft98-pro-theme .lbddsl[href*="instagram"]:before{content:"IG"!important;font-size:.68em}
+      .soft98-pro-theme .cbddlv:before{content:"+"!important;color:var(--s98p-accent)!important;margin-inline-end:.25em}
       .soft98-pro-theme ::selection{background:rgba(116,224,176,.32);color:#fff}
       .soft98-pro-link-badge{margin-inline-start:.45em;padding:.12em .45em;border:1px solid rgba(112,225,178,.42);border-radius:999px;color:#baffd8;background:rgba(112,225,178,.12);font-size:.78em;vertical-align:middle}
     `;
@@ -688,10 +714,24 @@
   function enhanceLogo() {
     if (!settings.pirateLogo) return;
     const logo = document.querySelector("#logo-link img, a[href='/'] img, a[href='https://soft98.ir/'] img");
-    if (!logo || logo.getAttribute("data-soft98-original-logo")) return;
-    logo.setAttribute("data-soft98-original-logo", logo.src || "");
-    logo.src = PIRATE_LOGO;
-    logo.alt = text("product");
+    if (logo && !logo.getAttribute("data-soft98-original-logo")) {
+      logo.setAttribute("data-soft98-original-logo", logo.src || "");
+      logo.src = PIRATE_LOGO;
+      logo.alt = text("product");
+      return;
+    }
+    for (const link of document.querySelectorAll("a[href='/'], a[href='https://soft98.ir/'], a[href='https://soft98.ir']")) {
+      const style = getComputedStyle(link);
+      if (!/logo\.(?:avif|png|webp|jpg|jpeg|svg)/i.test(style.backgroundImage || "")) continue;
+      if (link.getAttribute("data-soft98-original-logo")) return;
+      link.setAttribute("data-soft98-original-logo", style.backgroundImage || "");
+      link.style.backgroundImage = `url("${PIRATE_LOGO}")`;
+      link.style.backgroundSize = "contain";
+      link.style.backgroundRepeat = "no-repeat";
+      link.style.backgroundPosition = "center";
+      link.setAttribute("aria-label", text("product"));
+      break;
+    }
   }
 
   function renderControlPanel() {
@@ -701,9 +741,10 @@
     const wrap = document.createElement("div");
     wrap.id = "soft98-pro-control";
     wrap.dir = "ltr";
+    wrap.setAttribute("data-open", "false");
     wrap.innerHTML = `
       <button type="button" data-role="toggle" aria-label="${text("product")}">☠</button>
-      <form hidden>
+      <form aria-hidden="true">
         <header><strong>${text("product")}</strong><small>${VERSION}</small></header>
         ${[
           ["blockAds", text("blockAds")],
@@ -723,9 +764,10 @@
     const style = document.createElement("style");
     style.textContent = `
       #soft98-pro-control{position:fixed;z-index:2147483647;left:16px;bottom:16px;font:13px/1.4 system-ui,sans-serif;color:#e6f0fa}
-      #soft98-pro-control>[data-role=toggle]{width:42px;height:42px;border:1px solid #2d4a66;border-radius:50%;background:#101b27;color:#70e1b2;font-size:20px;box-shadow:0 10px 30px rgba(0,0,0,.35);cursor:pointer}
-      #soft98-pro-control form{display:grid;gap:10px;width:260px;margin-top:10px;padding:14px;border:1px solid #27405a;border-radius:12px;background:rgba(8,17,26,.96);box-shadow:0 18px 55px rgba(0,0,0,.45);backdrop-filter:blur(14px)}
-      #soft98-pro-control form[hidden]{display:none}
+      #soft98-pro-control>[data-role=toggle]{width:42px;height:42px;border:1px solid #2d4a66;border-radius:50%;background:#101b27;color:#70e1b2;font-size:20px;box-shadow:0 10px 30px rgba(0,0,0,.35);cursor:pointer;transition:transform .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease}
+      #soft98-pro-control>[data-role=toggle]:hover,#soft98-pro-control[data-open=true]>[data-role=toggle]{transform:translateY(-1px) scale(1.04);border-color:#70e1b2;background:#13283a;box-shadow:0 14px 36px rgba(0,0,0,.44),0 0 0 4px rgba(112,225,178,.12)}
+      #soft98-pro-control form{display:grid;gap:10px;width:260px;margin-top:10px;padding:14px;border:1px solid #27405a;border-radius:12px;background:rgba(8,17,26,.96);box-shadow:0 18px 55px rgba(0,0,0,.45);backdrop-filter:blur(14px);transform-origin:left bottom;transform:translateY(10px) scale(.96);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,transform .22s cubic-bezier(.2,.8,.2,1),visibility 0s linear .22s}
+      #soft98-pro-control[data-open=true] form{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1);transition:opacity .18s ease,transform .22s cubic-bezier(.2,.8,.2,1),visibility 0s}
       #soft98-pro-control header{display:flex;justify-content:space-between;align-items:center;color:#f0f7ff}
       #soft98-pro-control small{color:#9db1c6}
       #soft98-pro-control label{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:7px 8px;border:1px solid #1d3145;border-radius:8px;background:#101b27}
@@ -736,10 +778,14 @@
     wrap.appendChild(style);
     wrap.querySelector("[data-role='toggle']").addEventListener("click", () => {
       const form = wrap.querySelector("form");
-      form.hidden = !form.hidden;
+      const open = wrap.getAttribute("data-open") !== "true";
+      wrap.setAttribute("data-open", open ? "true" : "false");
+      form.setAttribute("aria-hidden", open ? "false" : "true");
     });
     wrap.querySelector("[data-role='close']").addEventListener("click", () => {
-      wrap.querySelector("form").hidden = true;
+      const form = wrap.querySelector("form");
+      wrap.setAttribute("data-open", "false");
+      form.setAttribute("aria-hidden", "true");
     });
     wrap.querySelector("[data-role='scan']").addEventListener("click", () => schedule(document));
     wrap.addEventListener("change", (event) => {
@@ -1035,8 +1081,12 @@
     configure: (next) => writeSettings({ ...settings, ...next }),
     openPanel: () => {
       renderControlPanel();
+      const wrap = document.querySelector("#soft98-pro-control");
       const form = document.querySelector("#soft98-pro-control form");
-      if (form) form.hidden = false;
+      if (wrap && form) {
+        wrap.setAttribute("data-open", "true");
+        form.setAttribute("aria-hidden", "false");
+      }
     },
     patchSoft98Code,
     unpackDeanEdwards,

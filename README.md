@@ -4,6 +4,10 @@ Soft98 Pro improves the Soft98 browsing experience with ad blocking, anti-adbloc
 
 The userscript and extensions are built from the same shared runtime in `src/runtime.js`, so the blocking logic, diagnostics, i18n, dark theme, favicon status indicator, and link recovery behavior stay aligned.
 
+## Screenshot
+
+![Soft98 Pro dark mode running on Soft98](docs/assets/soft98-pro-dark.png)
+
 ## ✨ What It Does
 
 - Blocks ad surfaces using source, shape, size, and link behavior.
@@ -37,6 +41,7 @@ Both options use the same core code. Choose the userscript for speed and transpa
 ```bash
 npm ci
 npm run ci
+npm run screenshot
 ```
 
 Build outputs:
@@ -46,6 +51,7 @@ Build outputs:
 - `dist/chromium`: Manifest V3 build for Chrome and Edge.
 - `dist/firefox`: Firefox build with early page-runtime injection.
 - `dist/packages/*.zip`: release-ready ZIPs.
+- `docs/assets/soft98-pro-dark.png`: local proof screenshot generated from the live Soft98 harness.
 
 ## 🚀 Install Unpacked
 

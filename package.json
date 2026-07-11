@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "build": "node tools/build.js",
-    "check": "npm run build && node --check src/runtime.js && node --check src/content/bridge.js && node --check src/content/firefox-injector.js && node --check src/ui/options.js && node --check test/serve-harness.js && node --check soft98-pro.user.js",
+    "screenshot": "node tools/screenshot.js",
+    "check": "npm run build && node --check src/runtime.js && node --check src/content/bridge.js && node --check src/content/firefox-injector.js && node --check src/ui/options.js && node --check test/serve-harness.js && node --check tools/screenshot.js && node --check soft98-pro.user.js",
     "test": "node test/validate-build.js",
     "ci": "npm run check && npm test"
   },
